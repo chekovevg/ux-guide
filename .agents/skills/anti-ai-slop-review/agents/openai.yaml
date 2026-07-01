@@ -1,0 +1,4 @@
+interface:
+  display_name: "Anti AI Slop Review"
+  short_description: "Review UI and content for generic output"
+  default_prompt: "Use $anti-ai-slop-review to critique this guide UI and content for generic AI-looking output."

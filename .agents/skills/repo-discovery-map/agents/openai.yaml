@@ -1,0 +1,4 @@
+interface:
+  display_name: "Repo Discovery Map"
+  short_description: "Map the repo before making changes"
+  default_prompt: "Use $repo-discovery-map to inspect this project and summarize the relevant files before editing."

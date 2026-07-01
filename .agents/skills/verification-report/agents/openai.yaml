@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verification Report"
+  short_description: "Run checks and report evidence"
+  default_prompt: "Use $verification-report to verify this change and report checks, risks, and confidence."

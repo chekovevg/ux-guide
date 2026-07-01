@@ -1,0 +1,12 @@
+<svg width="906" height="464" viewBox="0 0 906 464" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="906" height="464" rx="14" fill="#4B0D52"/>
+  <text x="42" y="63" fill="white" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800">wynde</text>
+  <text x="42" y="198" fill="white" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="500">Resistance to research</text>
+  <text x="42" y="242" fill="#F1D8F6" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="500">Get to know how to handle most</text>
+  <text x="42" y="281" fill="#F1D8F6" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="500">common objections</text>
+  <circle cx="694" cy="232" r="122" stroke="#F2C8F6" stroke-width="1.4"/>
+  <circle cx="878" cy="232" r="231" stroke="#F2C8F6" stroke-width="1.4"/>
+  <path d="M695 109C654.5 178.5 654.5 285.5 695 355" stroke="#F2C8F6" stroke-width="1.4" stroke-dasharray="12 12"/>
+  <text x="691" y="236" fill="#F2C8F6" font-family="Roboto Mono, monospace" font-size="14">1</text>
+  <text x="877" y="236" fill="#F2C8F6" font-family="Roboto Mono, monospace" font-size="14">0</text>
+</svg>

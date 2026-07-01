@@ -1,0 +1,4 @@
+interface:
+  display_name: "Focused Implementation"
+  short_description: "Implement only the approved scope"
+  default_prompt: "Use $focused-implementation to make a minimal, idiomatic change in this project."

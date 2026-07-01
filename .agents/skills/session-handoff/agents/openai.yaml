@@ -1,0 +1,4 @@
+interface:
+  display_name: "Session Handoff"
+  short_description: "Prepare a compact next-session handoff"
+  default_prompt: "Use $session-handoff to summarize this session for the next Codex thread."

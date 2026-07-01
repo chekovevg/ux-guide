@@ -1,0 +1,6 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="checkbox">
+<rect id="checkbox_2" x="0.5" y="0.5" width="19" height="19" rx="3.5" fill="var(--fill-0, #267AEE)" stroke="var(--stroke-0, #267AEE)"/>
+<path id="Primary fill" fill-rule="evenodd" clip-rule="evenodd" d="M7.74438 13.9222L5.24437 11.4222C4.91854 11.0963 4.91854 10.5697 5.24437 10.2438C5.57021 9.91799 6.09687 9.91799 6.42271 10.2438L8.28604 12.1072L13.5344 6.12466C13.8344 5.77466 14.3602 5.73466 14.7085 6.03382C15.0585 6.33382 15.0994 6.85882 14.7994 7.20799L8.96604 13.8747C8.81521 14.0513 8.59687 14.1563 8.36521 14.1655C8.11271 14.1663 7.90021 14.0788 7.74438 13.9222Z" fill="var(--fill-0, white)"/>
+</g>
+</svg>
