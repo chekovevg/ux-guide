@@ -1,22 +1,21 @@
 import Image from "next/image";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import type { MouseEvent } from "react";
+import { ArrowLeft, ArrowRight, Check, Link as LucideLink } from "lucide-react";
 import type { ContentBlock, GuideChapter, GuideSection } from "./types";
-
-const headingLinkIcon = "/figma/icon-link-heading.svg";
-const calloutLinkIcon = "/figma/icon-link-callout.svg";
-const checkboxCheckedIcon = "/figma/icon-checkbox-checked.svg";
 
 export function ArticleContent({ chapter }: { chapter: GuideChapter }) {
   return (
     <>
       <Hero chapter={chapter} />
       {chapter.blocks?.length ? (
-        <div className="mt-8 flex flex-col gap-7">
+        <div className="article-block-stack mt-8">
           {chapter.blocks.map((block, index) => (
             <ContentBlockView
               key={`${chapter.slug}-${index}`}
               block={block}
               blockId={`${chapter.slug}-block-${index + 1}`}
+              checklistTitle={block.type === "todoList" ? chapter.title : undefined}
+              checklistAccentItemIndex={block.type === "todoList" ? 4 : undefined}
             />
           ))}
         </div>
@@ -24,23 +23,17 @@ export function ArticleContent({ chapter }: { chapter: GuideChapter }) {
       {chapter.sections.map((section) => (
         <GuideSectionView key={section.id} section={section} />
       ))}
+      {chapter.updatedAt ? (
+        <ArticleUpdateStatus updatedAt={chapter.updatedAt} />
+      ) : null}
     </>
   );
 }
 
 function Hero({ chapter }: { chapter: GuideChapter }) {
-  const hasMeta = chapter.updatedAt || chapter.readTime;
-
   return (
     <header id="top" className="scroll-mt-28">
-      {hasMeta ? (
-        <div className="article-meta flex flex-wrap items-center gap-2">
-          {chapter.updatedAt ? <span>{chapter.updatedAt}</span> : null}
-          {chapter.updatedAt && chapter.readTime ? <span aria-hidden="true">/</span> : null}
-          {chapter.readTime ? <span>{chapter.readTime}</span> : null}
-        </div>
-      ) : null}
-      <h1 className={hasMeta ? "type-h1 mt-6" : "type-h1"}>{chapter.title}</h1>
+      <h1 className="type-h1">{chapter.title}</h1>
       {chapter.subtitle ? (
         <p className="type-lead mt-[14px] text-[var(--muted)]">{chapter.subtitle}</p>
       ) : null}
@@ -72,16 +65,20 @@ function GuideSectionView({
   const spacingClass = depth === 0 ? "pt-[84px]" : "pt-10";
 
   return (
-    <section id={section.id} className={`scroll-mt-28 ${spacingClass}`}>
+    <section className={spacingClass}>
       {section.eyebrow ? (
         <p className="text-[12px] leading-none text-[var(--muted)]">{section.eyebrow}</p>
       ) : null}
-      <div className="article-heading">
-        <a className="article-heading-anchor" href={`#${section.id}`} aria-label={`Link to ${section.title}`}>
-          <Image alt="" aria-hidden="true" src={headingLinkIcon} width={20} height={20} />
+      <Heading id={section.id} className={`article-heading scroll-mt-28 ${headingClass}`}>
+        <a
+          className="article-heading-link"
+          href={`#${section.id}`}
+          onClick={(event) => handleHeadingLinkClick(event, section.id)}
+        >
+          {section.title}
         </a>
-        <Heading className={headingClass}>{section.title}</Heading>
-      </div>
+        <HeadingLinkIcon />
+      </Heading>
       {section.image ? (
         <figure className="mt-8 overflow-hidden rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--subtle)]">
           <Image
@@ -94,7 +91,7 @@ function GuideSectionView({
         </figure>
       ) : null}
       {section.blocks.length ? (
-        <div className="mt-8 flex flex-col gap-7">
+        <div className="article-block-stack mt-8">
           {section.blocks.map((block, index) => (
             <ContentBlockView
               key={`${section.id}-${index}`}
@@ -118,24 +115,37 @@ function GuideSectionView({
 function ContentBlockView({
   block,
   blockId,
+  checklistTitle,
+  checklistAccentItemIndex,
 }: {
   block: ContentBlock;
   blockId: string;
+  checklistTitle?: string;
+  checklistAccentItemIndex?: number;
 }) {
   switch (block.type) {
     case "lead":
       return <p className="type-lead">{block.text}</p>;
     case "paragraph":
-      return <p className="type-body">{block.text}</p>;
+      return (
+        <p
+          className="article-paragraph type-body"
+          data-terminal-colon={block.text.trim().endsWith(":") ? "true" : undefined}
+        >
+          {block.text}
+        </p>
+      );
     case "callout":
       return <ArticleCallout block={block} blockId={blockId} />;
     case "bulletedList":
       return (
-        <ul className="article-list type-body">
+        <div className="article-paragraph-list">
           {block.items.map((item) => (
-            <li key={item}>{item}</li>
+            <p key={item} className="article-paragraph type-body">
+              {item}
+            </p>
           ))}
-        </ul>
+        </div>
       );
     case "numberedList":
       return (
@@ -147,7 +157,11 @@ function ContentBlockView({
       );
     case "todoList":
       return (
-        <ArticleChecklist items={block.items} />
+        <ArticleChecklist
+          title={checklistTitle}
+          items={block.items}
+          accentItemIndex={checklistAccentItemIndex}
+        />
       );
     case "image":
       return (
@@ -168,7 +182,7 @@ function ContentBlockView({
       );
     case "toggle":
       return (
-        <details className="rounded-[var(--radius-standard)] border border-[var(--line)] bg-white p-5">
+        <details className="rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--surface-raised)] p-5">
           <summary className="cursor-pointer text-[15px] font-semibold">
             {block.title}
           </summary>
@@ -179,7 +193,7 @@ function ContentBlockView({
       );
     case "rawTable":
       return (
-        <div className="overflow-x-auto rounded-[var(--radius-standard)] border border-[var(--line)] bg-white p-5">
+        <div className="overflow-x-auto rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--surface-raised)] p-5">
           <p className="type-table whitespace-pre-wrap break-words text-[var(--foreground)]">
             {block.text}
           </p>
@@ -187,7 +201,7 @@ function ContentBlockView({
       );
     case "steps":
       return (
-        <div className="rounded-[var(--radius-standard)] border border-[var(--line)] bg-white p-5">
+        <div className="rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--surface-raised)] p-5">
           <h3 className="text-[17px] font-semibold">{block.title}</h3>
           <ol className="mt-5 flex flex-col gap-4">
             {block.items.map((item, index) => (
@@ -280,6 +294,10 @@ function ArticleCallout({
 }) {
   const isTip = block.variant === "tip";
   const linkHref = block.href ?? `#${blockId}`;
+  const textParagraphs = block.text
+    .split(/\n{2,}/)
+    .map((text) => text.trim())
+    .filter(Boolean);
 
   return (
     <aside id={blockId} className={`article-callout article-callout-${block.variant}`}>
@@ -287,7 +305,11 @@ function ArticleCallout({
         <div className={isTip ? "article-callout-stack article-callout-stack-tip" : "article-callout-stack"}>
           {isTip ? <p className="article-callout-badge">Pro-tip</p> : null}
           {block.title ? <p className="article-callout-title">{block.title}</p> : null}
-          <p className="article-callout-text">{block.text}</p>
+          {textParagraphs.map((text, index) => (
+            <p key={`${blockId}-text-${index + 1}`} className="article-callout-text">
+              {text}
+            </p>
+          ))}
           {block.href && block.linkLabel ? (
             <a className="article-link article-callout-link" href={block.href}>
               {block.linkLabel}
@@ -296,27 +318,80 @@ function ArticleCallout({
         </div>
       </div>
       <a className="article-callout-anchor" href={linkHref} aria-label="Link to callout">
-        <Image alt="" aria-hidden="true" src={calloutLinkIcon} width={16} height={16} />
+        <LucideLink aria-hidden="true" className="size-3.5" />
       </a>
     </aside>
+  );
+}
+
+function handleHeadingLinkClick(
+  _event: MouseEvent<HTMLAnchorElement>,
+  sectionId: string,
+) {
+  if (typeof window === "undefined" || !window.navigator.clipboard) {
+    return;
+  }
+
+  const sectionUrl = new URL(window.location.href);
+  sectionUrl.hash = sectionId;
+
+  void window.navigator.clipboard.writeText(sectionUrl.toString()).catch(() => {
+    // The hash link still works when browser permissions block clipboard writes.
+  });
+}
+
+function HeadingLinkIcon() {
+  return (
+    <svg
+      aria-label="Link to section"
+      className="article-heading-icon"
+      fill="none"
+      height="20"
+      viewBox="0 0 20 20"
+      width="20"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M13.1563 11.128L14.6776 9.60672C16.078 8.20639 16.078 5.93599 14.6776 4.53566C13.2773 3.13532 11.0069 3.13532 9.60656 4.53565L8.08524 6.05698M11.1279 13.1565L9.60656 14.6778C8.20622 16.0781 5.93582 16.0781 4.53549 14.6778C3.13515 13.2775 3.13515 11.0071 4.53549 9.60672L6.05681 8.0854"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.3"
+      />
+      <path
+        d="M11.1281 8.08541L8.08545 11.1281"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.3"
+      />
+    </svg>
   );
 }
 
 function ArticleChecklist({
   title,
   items,
+  accentItemIndex,
 }: {
   title?: string;
   items: string[];
+  accentItemIndex?: number;
 }) {
   return (
     <div className="article-checklist">
       {title ? <h3 className="article-checklist-title">{title}</h3> : null}
       <ul className="article-checklist-list">
-        {items.map((item) => (
+        {items.map((item, index) => (
           <li key={item} className="article-checklist-item">
-            <Image alt="" aria-hidden="true" src={checkboxCheckedIcon} width={20} height={20} />
-            <span>{item}</span>
+            <span className="article-checklist-icon" aria-hidden="true">
+              <Check className="size-3" strokeWidth={3} />
+            </span>
+            <span
+              className="article-checklist-text"
+              data-accent={index === accentItemIndex ? "true" : undefined}
+            >
+              {item}
+            </span>
           </li>
         ))}
       </ul>
@@ -330,6 +405,7 @@ function ArticleQuote({
   block: Extract<ContentBlock, { type: "quote" }>;
 }) {
   const authorName = block.authorName ?? block.byline;
+  const authorInitial = authorName?.trim().charAt(0).toUpperCase();
 
   return (
     <blockquote className="article-quote">
@@ -344,6 +420,10 @@ function ArticleQuote({
               height={46}
               className="article-quote-avatar"
             />
+          ) : authorInitial ? (
+            <span className="article-quote-avatar article-quote-avatar-placeholder" aria-hidden="true">
+              {authorInitial}
+            </span>
           ) : null}
           <div className="article-quote-author-text">
             <p className="article-quote-author-name">{authorName}</p>
@@ -354,5 +434,50 @@ function ArticleQuote({
         </footer>
       ) : null}
     </blockquote>
+  );
+}
+
+function ArticleUpdateStatus({ updatedAt }: { updatedAt: string }) {
+  const isEnglish = updatedAt.startsWith("Updated");
+  const helpText = isEnglish
+    ? "Have questions about the platform?"
+    : "Есть вопросы о платформе?";
+  const helpLinkText = isEnglish
+    ? "Visit the Help Center."
+    : "Перейти в Help Center.";
+
+  return (
+    <footer className="article-update-status" aria-label="Guide update status">
+      <p className="article-update-help">
+        <span>{helpText}</span>
+        <span className="article-update-help-link">{helpLinkText}</span>
+      </p>
+      <p className="article-update-date">
+        <TimeCircleIcon />
+        <span>{updatedAt}</span>
+      </p>
+    </footer>
+  );
+}
+
+function TimeCircleIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="article-update-icon"
+      fill="none"
+      height="24"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M12 9.19995V11.7993C12 11.9246 12.0627 12.0417 12.167 12.1113L14.1 13.4"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.5"
+      />
+    </svg>
   );
 }

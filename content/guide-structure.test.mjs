@@ -9,6 +9,18 @@ const ruStructure = JSON.parse(
   await readFile(new URL("./guide-structure.ru.json", import.meta.url), "utf8"),
 );
 
+async function readJsonIfExists(path) {
+  try {
+    return JSON.parse(await readFile(new URL(path, import.meta.url), "utf8"));
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
 function flattenHeadings(nodes) {
   return nodes.flatMap((node) => [node, ...flattenHeadings(node.children ?? [])]);
 }
@@ -33,6 +45,28 @@ function structuralSnapshot(nodes) {
     })),
     children: structuralSnapshot(node.children ?? []),
   }));
+}
+
+function collectLocalizableFields(value, path = []) {
+  if (Array.isArray(value)) {
+    return value.flatMap((item, index) =>
+      collectLocalizableFields(item, [...path, String(index)]),
+    );
+  }
+
+  if (!value || typeof value !== "object") {
+    return [];
+  }
+
+  return Object.entries(value).flatMap(([key, child]) => {
+    const childPath = [...path, key];
+
+    if ((key === "title" || key === "text") && typeof child === "string") {
+      return [{ path: childPath.join("."), value: child }];
+    }
+
+    return collectLocalizableFields(child, childPath);
+  });
 }
 
 test("stores the full Notion guide structure as backend-ready data", () => {
@@ -137,9 +171,60 @@ test("keeps the default Russian structure as the localized RU baseline", () => {
   );
 });
 
+test("ships a structurally equivalent English guide structure", async () => {
+  const enStructure = await readJsonIfExists("./guide-structure.en.json");
+
+  assert.ok(enStructure, "Expected content/guide-structure.en.json to exist");
+  assert.equal(enStructure.schemaVersion, ruStructure.schemaVersion);
+  assert.equal(enStructure.source.notionPageId, ruStructure.source.notionPageId);
+  assert.equal(enStructure.chapters.length, ruStructure.chapters.length);
+  assert.deepEqual(
+    structuralSnapshot(enStructure.chapters),
+    structuralSnapshot(ruStructure.chapters),
+  );
+  assert.equal(
+    flattenHeadings(enStructure.chapters).length,
+    flattenHeadings(ruStructure.chapters).length,
+  );
+  assert.equal(
+    flattenBlocks(enStructure.chapters).length,
+    flattenBlocks(ruStructure.chapters).length,
+  );
+
+  const ruFields = collectLocalizableFields(ruStructure);
+  const enFields = collectLocalizableFields(enStructure);
+
+  assert.ok(enFields.length > 700);
+  assert.deepEqual(
+    enFields.map((field) => field.path),
+    ruFields.map((field) => field.path),
+  );
+
+  for (const field of enFields) {
+    assert.doesNotMatch(field.value, /[\u0400-\u04ff]/, field.path);
+  }
+});
+
+test("exposes both localized structures through the locale loader", async () => {
+  const loaderSource = await readFile(
+    new URL("./guideStructure.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    loaderSource,
+    /import guideStructureEnJson from "\.\/guide-structure\.en\.json";/,
+  );
+  assert.match(loaderSource, /availableGuideLocales = \["ru", "en"\] as const/);
+  assert.match(loaderSource, /en: guideStructureEnJson as GuideStructure/);
+  assert.match(loaderSource, /description: getHeadingDescription\(chapter\)/);
+});
+
 test("keeps guide content out of the data adapter hardcode", async () => {
   const guideSource = await readFile(new URL("./guide.ts", import.meta.url), "utf8");
 
+  assert.match(guideSource, /function appendCallout/);
+  assert.match(guideSource, /previousBlock\.text = `\$\{previousBlock\.text\}\\n\\n\$\{text\}`/);
   assert.doesNotMatch(guideSource, /resistanceIntro/);
   assert.doesNotMatch(guideSource, /resistanceSections/);
   assert.doesNotMatch(guideSource, /Resistance to research/);

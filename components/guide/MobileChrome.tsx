@@ -1,103 +1,85 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { Search, X } from "lucide-react";
 import {
-  Bookmark,
-  Info,
-  Menu,
-  Search,
-  X,
-} from "lucide-react";
-import { getMobileContentsItems } from "./mobileContents.mjs";
-import type { GuideNavigationItem } from "./types";
+  getGuideChapterHref,
+  getNavigationLabel,
+} from "./mobileContents.mjs";
+import {
+  GuideLanguageMenu,
+  GuideThemeToggle,
+} from "./GuideNavigation";
+import type {
+  GuideLanguageLink,
+  GuideNavigationGroup,
+  GuideSearchItem,
+  GuideThemeMode,
+} from "./types";
 
-export function MobileContentsTrigger({
-  open,
-  onOpen,
-}: {
-  open: boolean;
-  onOpen: () => void;
-}) {
-  if (open) {
-    return null;
-  }
-
-  return (
-    <button
-      className="mobile-contents-trigger"
-      aria-label="Open contents"
-      aria-haspopup="dialog"
-      onClick={onOpen}
-    >
-      <Menu aria-hidden="true" className="size-5" />
-    </button>
-  );
-}
+type PageTocLink = {
+  depth?: number;
+  id: string;
+  title: string;
+};
 
 export function MobileContentsSection({
+  activeId,
+  label,
+  links,
   open,
-  navigation,
-  onClose,
+  onNavigate,
 }: {
+  activeId: string;
+  label: string;
+  links: PageTocLink[];
   open: boolean;
-  navigation: GuideNavigationItem[];
-  onClose: () => void;
+  onNavigate: () => void;
 }) {
   if (!open) {
     return null;
   }
 
-  const items = getMobileContentsItems(navigation);
-
   return (
     <section
-      aria-label="Contents"
-      aria-modal="true"
+      aria-label={label}
       className="mobile-contents-section"
-      role="dialog"
     >
-      <nav aria-label="Guide chapters">
+      <nav aria-label={label}>
         <ol className="mobile-contents-list">
-          {items.map((item) => (
-            <li key={item.slug}>
+          {links.map((item) => (
+            <li key={item.id}>
               <a
-                aria-current={item.active ? "page" : undefined}
-                aria-disabled={!item.available ? true : undefined}
+                aria-current={item.id === activeId ? "location" : undefined}
                 className="mobile-contents-link"
-                data-active={item.active ? "true" : undefined}
-                href={item.href}
-                onClick={(event) => {
-                  if (!item.available) {
-                    event.preventDefault();
-                    return;
-                  }
-
-                  onClose();
-                }}
+                data-active={item.id === activeId ? "true" : undefined}
+                data-depth={item.depth ?? 0}
+                href={`#${item.id}`}
+                onClick={onNavigate}
               >
-                {item.label}
+                {item.title}
               </a>
             </li>
           ))}
         </ol>
       </nav>
-      <div className="mobile-contents-close-row">
-        <button
-          className="mobile-contents-close"
-          aria-label="Close contents"
-          onClick={onClose}
-        >
-          <X aria-hidden="true" className="size-5" />
-        </button>
-      </div>
     </section>
   );
 }
 
 export function MobileSearchPanel({
+  items,
   open,
   onClose,
 }: {
+  items: GuideSearchItem[];
   open: boolean;
   onClose: () => void;
 }) {
+  const [query, setQuery] = useState("");
+
+  const results = useMemo(() => getSearchResults(items, query), [items, query]);
+
   if (!open) {
     return null;
   }
@@ -117,6 +99,8 @@ export function MobileSearchPanel({
           className="mobile-search-input"
           placeholder="Search guide"
           type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
         />
         <button
           className="mobile-search-close"
@@ -127,17 +111,46 @@ export function MobileSearchPanel({
           <X aria-hidden="true" className="size-5" />
         </button>
       </label>
-      <p className="mobile-search-empty">No recent searches</p>
+      <div className="mobile-search-results">
+        {results.length ? (
+          results.map((item) => (
+            <a
+              key={`${item.type}-${item.href}`}
+              className="mobile-search-result"
+              href={item.href}
+              onClick={() => {
+                setQuery("");
+                onClose();
+              }}
+            >
+              <span>{item.label}</span>
+              <small>{item.eyebrow}</small>
+            </a>
+          ))
+        ) : (
+          <p className="mobile-search-empty">No results</p>
+        )}
+      </div>
     </section>
   );
 }
 
 export function MobileSiteMenu({
+  basePath = "/guide",
+  languageLinks,
+  navigationGroups,
   open,
+  themeMode,
   onClose,
+  onThemeChange,
 }: {
+  basePath?: string;
+  languageLinks: GuideLanguageLink[];
+  navigationGroups: GuideNavigationGroup[];
   open: boolean;
+  themeMode: GuideThemeMode;
   onClose: () => void;
+  onThemeChange: (themeMode: GuideThemeMode) => void;
 }) {
   if (!open) {
     return null;
@@ -145,53 +158,65 @@ export function MobileSiteMenu({
 
   return (
     <section
-      aria-label="Navigation menu"
+      aria-label="Guide navigation"
       aria-modal="true"
       className="mobile-site-menu"
       role="dialog"
     >
       <div className="mobile-site-menu-content">
-        <div>
-          <div className="mobile-site-actions">
-            <div className="mobile-site-bookmark">
-              <Bookmark aria-hidden="true" className="size-5" />
-              <span>Bookmarks</span>
-            </div>
-            <div className="mobile-site-info">
-              <Info aria-hidden="true" className="size-2.5" />
-              <span>Log in to use</span>
-            </div>
-          </div>
-          <div className="mobile-site-auth">
-            <a className="button-secondary" href="/login" onClick={onClose}>
-              Log in
-            </a>
-            <a className="button-primary" href="/signup" onClick={onClose}>
-              Start for free
-            </a>
-          </div>
-        </div>
+        <nav aria-label="Guide chapters" className="mobile-guide-nav">
+          {navigationGroups.map((group) => (
+            <section className="mobile-guide-group" key={group.title}>
+              <h2 className="mobile-guide-group-title">{group.title}</h2>
+              <ol className="mobile-guide-list">
+                {group.items.map((item) => (
+                  <li key={item.slug}>
+                    <a
+                      aria-current={item.active ? "page" : undefined}
+                      aria-disabled={!item.available ? true : undefined}
+                      className="mobile-guide-link"
+                      data-active={item.active ? "true" : undefined}
+                      data-disabled={!item.available ? "true" : undefined}
+                      href={item.available ? getGuideChapterHref(item.slug, basePath) : "#"}
+                      onClick={(event) => {
+                        if (!item.available) {
+                          event.preventDefault();
+                          return;
+                        }
+
+                        onClose();
+                      }}
+                    >
+                      {getNavigationLabel(item.slug, item.title)}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ))}
+        </nav>
 
         <footer className="mobile-site-footer">
-          <div className="mobile-site-social">
-            <a href="https://www.linkedin.com" aria-label="LinkedIn">
-              <span aria-hidden="true">in</span>
-            </a>
-            <a href="https://twitter.com" aria-label="Twitter">
-              <span aria-hidden="true">X</span>
-            </a>
-          </div>
-          <div className="mobile-site-footer-links">
-            <a href="/terms" onClick={onClose}>
-              Terms of Service
-            </a>
-            <a href="/privacy" onClick={onClose}>
-              Privacy Policy
-            </a>
-          </div>
-          <p>© 2025 Pathway Research Solutions Ltd</p>
+          <GuideLanguageMenu languageLinks={languageLinks} />
+          <GuideThemeToggle themeMode={themeMode} onThemeChange={onThemeChange} />
         </footer>
       </div>
     </section>
   );
+}
+
+function getSearchResults(items: GuideSearchItem[], query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  if (!normalizedQuery) {
+    return items.slice(0, 8);
+  }
+
+  return items
+    .filter((item) => {
+      const haystack = `${item.label} ${item.eyebrow}`.toLowerCase();
+
+      return haystack.includes(normalizedQuery);
+    })
+    .slice(0, 12);
 }

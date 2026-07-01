@@ -96,3 +96,13 @@ test("marks only the current chapter as active in mobile contents", () => {
     "/guide/soprotivlenie-issledovaniyam-i-kak-s-etim-rabotat",
   );
 });
+
+test("builds localized mobile contents hrefs from a guide base path", () => {
+  const items = getMobileContentsItems(navigation, "/en/guide");
+  const activeItem = items.find((item) => item.active);
+
+  assert.equal(
+    activeItem.href,
+    "/en/guide/soprotivlenie-issledovaniyam-i-kak-s-etim-rabotat",
+  );
+});

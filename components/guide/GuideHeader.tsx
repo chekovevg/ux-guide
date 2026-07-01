@@ -1,7 +1,14 @@
 import Image from "next/image";
-import { Menu, Search, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  PanelLeft,
+  Search,
+  X,
+} from "lucide-react";
 
 type GuideHeaderProps = {
+  contentsOpen: boolean;
   currentTitle: string;
   menuOpen: boolean;
   searchOpen: boolean;
@@ -11,6 +18,7 @@ type GuideHeaderProps = {
 };
 
 export function GuideHeader({
+  contentsOpen,
   currentTitle,
   menuOpen,
   searchOpen,
@@ -19,7 +27,7 @@ export function GuideHeader({
   onSearch,
 }: GuideHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-white/95 backdrop-blur lg:h-[60px]">
+    <header className="guide-header">
       <div className="guide-header-inner">
         <a
           className="guide-header-brand"
@@ -32,71 +40,54 @@ export function GuideHeader({
             height="23"
             src="/figma/logo-mobile.svg"
             width="128"
-          />
-          <Image
-            alt="Wynde guide"
-            className="guide-header-logo guide-header-logo-desktop"
-            height="28"
-            src="/figma/logo-desktop.svg"
-            width="157"
+            priority
           />
         </a>
 
-        <div className="guide-header-search-area">
-          <button
-            className="search-control header-search"
-            aria-label="Search guide"
-            aria-expanded={searchOpen}
-            data-active={searchOpen ? "true" : undefined}
-            onClick={onSearch}
-          >
-            <span className="flex items-center gap-3 font-normal text-[var(--muted)]">
-              <Search aria-hidden="true" className="size-4" />
-              <span>Search guide</span>
-            </span>
-            <kbd className="text-[14px] text-[var(--figma-color-grays-800)]">K</kbd>
-          </button>
-        </div>
-
-        <div className="guide-header-auth">
-          <a className="button-secondary" href="/login">
-            Log in
-          </a>
-          <a className="button-primary" href="/signup">
-            Start for free
-          </a>
-        </div>
-
-        <div className="ml-auto flex items-center gap-1 lg:hidden">
+        <div className="guide-header-actions">
           <button
             className="icon-button"
-            aria-label="Search"
+            aria-label={searchOpen ? "Close search" : "Search"}
             aria-expanded={searchOpen}
+            type="button"
             onClick={onSearch}
           >
-            <Search aria-hidden="true" className="size-5" />
+            {searchOpen ? (
+              <X aria-hidden="true" className="size-5" />
+            ) : (
+              <Search aria-hidden="true" className="size-5" />
+            )}
           </button>
           <button
             className="icon-button"
-            aria-label={menuOpen ? "Close navigation" : "Open navigation"}
+            aria-label={menuOpen ? "Close guide navigation" : "Open guide navigation"}
             aria-expanded={menuOpen}
+            type="button"
             onClick={onMenu}
           >
             {menuOpen ? (
               <X aria-hidden="true" className="size-5" />
             ) : (
-              <Menu aria-hidden="true" className="size-5" />
+              <PanelLeft aria-hidden="true" className="size-5" />
             )}
           </button>
         </div>
       </div>
       {!menuOpen && !searchOpen ? (
         <button
-          className="guide-header-nav-panel lg:hidden"
-          aria-label="Open contents"
+          className="guide-header-nav-panel"
+          aria-label="Open page contents"
+          aria-expanded={contentsOpen}
+          type="button"
           onClick={onContents}
         >
+          <span className="guide-header-nav-dot" aria-hidden="true" />
           <span>{currentTitle}</span>
+          {contentsOpen ? (
+            <ChevronUp aria-hidden="true" className="size-4" />
+          ) : (
+            <ChevronDown aria-hidden="true" className="size-4" />
+          )}
         </button>
       ) : null}
     </header>

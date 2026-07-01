@@ -1,6 +1,7 @@
 type PageTocProps = {
   links: Array<{ id: string; title: string; depth?: number }>;
   activeId: string;
+  title: string;
   compact?: boolean;
   onNavigate?: () => void;
 };
@@ -8,6 +9,7 @@ type PageTocProps = {
 export function PageToc({
   links,
   activeId,
+  title,
   compact = false,
   onNavigate,
 }: PageTocProps) {
@@ -17,13 +19,15 @@ export function PageToc({
 
   return (
     <nav
-      aria-label="On this page"
-      className={compact ? "" : ""}
+      aria-label={title}
+      className={compact ? "page-toc page-toc-compact" : "page-toc"}
     >
-      <p className="mb-4 text-[16px] font-semibold leading-[26px] text-[var(--foreground)]">
-        On this page
-      </p>
-      <ol className="flex flex-col gap-0">
+      {!compact ? (
+        <p className="page-toc-title">
+          {title}
+        </p>
+      ) : null}
+      <ol className="page-toc-list">
         {links.map((link) => {
           const active = link.id === activeId;
           const nested = (link.depth ?? 0) > 0;
@@ -31,13 +35,10 @@ export function PageToc({
           return (
             <li key={link.id}>
               <a
-                className={[
-                  "block border-l py-3 pl-4 pr-3 text-[14px] leading-5 transition-colors",
-                  nested ? "pl-8" : "",
-                  active
-                    ? "border-[var(--toc-active)] text-[var(--toc-active)]"
-                    : "border-[var(--line)] text-[var(--muted)] hover:border-[var(--toc-active)] hover:text-[var(--toc-active)]",
-                ].join(" ")}
+                aria-current={active ? "location" : undefined}
+                className="page-toc-link"
+                data-active={active ? "true" : undefined}
+                data-nested={nested ? "true" : undefined}
                 href={`#${link.id}`}
                 onClick={onNavigate}
               >

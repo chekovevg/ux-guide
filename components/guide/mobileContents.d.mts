@@ -11,6 +11,12 @@ export declare function getNavigationLabel(
   fallback: string,
 ): string;
 
+export declare function getGuideChapterHref(
+  slug: string,
+  basePath?: string,
+): string;
+
 export declare function getMobileContentsItems(
   navigation: readonly GuideNavigationItem[],
+  basePath?: string,
 ): MobileContentsItem[];

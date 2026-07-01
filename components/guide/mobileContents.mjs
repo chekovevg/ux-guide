@@ -21,7 +21,15 @@ export function getNavigationLabel(slug, fallback) {
   return fallback;
 }
 
-export function getMobileContentsItems(navigation) {
+export function getGuideChapterHref(slug, basePath = "/guide") {
+  const normalizedBasePath = basePath.endsWith("/")
+    ? basePath.slice(0, -1)
+    : basePath;
+
+  return `${normalizedBasePath}/${slug}`;
+}
+
+export function getMobileContentsItems(navigation, basePath = "/guide") {
   return [...navigation]
     .sort((left, right) => {
       const leftIndex = mobileContentsOrderBySlug.get(left.slug);
@@ -35,7 +43,7 @@ export function getMobileContentsItems(navigation) {
     .map((item) => ({
       ...item,
       active: item.active === true,
-      href: item.available ? `/guide/${item.slug}` : "#",
+      href: item.available ? getGuideChapterHref(item.slug, basePath) : "#",
       label: getNavigationLabel(item.slug, item.title),
     }));
 }

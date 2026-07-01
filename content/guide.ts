@@ -4,6 +4,7 @@ import {
   getGuideStructure,
   getGuideStructureChapters,
   getGuideStructureNavigation,
+  getGuideStructureNavigationGroups,
   type GuideLocale,
   type GuideStructureBlock,
   type GuideStructureHeading,
@@ -82,6 +83,81 @@ function appendGroupedList(
   result.push({ type, items });
 }
 
+function appendCallout(result: ContentBlock[], text: string) {
+  const previousBlock = result[result.length - 1];
+
+  if (previousBlock?.type === "callout" && previousBlock.variant === "tip") {
+    previousBlock.text = `${previousBlock.text}\n\n${text}`;
+    return;
+  }
+
+  result.push({ type: "callout", variant: "tip", text });
+}
+
+function getKnownQuoteAuthorImage(
+  authorName: string,
+): Extract<ContentBlock, { type: "quote" }>["authorImage"] {
+  if (/марина\s+суслова|marina\s+suslova/i.test(authorName)) {
+    return {
+      src: "/figma/quote-author-marina.png",
+      alt: authorName,
+    };
+  }
+
+  return undefined;
+}
+
+function parseStructuredQuote(text: string): Extract<ContentBlock, { type: "quote" }> | null {
+  const withoutPrefix = text
+    .replace(/^Цитата\s*/i, "")
+    .replace(/^Quote:\s*/i, "")
+    .trim();
+  const firstQuoteIndex = withoutPrefix.search(/[«“”"]/u);
+
+  if (firstQuoteIndex < 0) {
+    return null;
+  }
+
+  const quoteEndIndexes = ["»", "”", "\""].map((mark) =>
+    withoutPrefix.lastIndexOf(mark),
+  );
+  const lastQuoteIndex = Math.max(...quoteEndIndexes);
+
+  if (lastQuoteIndex <= firstQuoteIndex) {
+    return null;
+  }
+
+  const quoteText = withoutPrefix
+    .slice(firstQuoteIndex + 1, lastQuoteIndex)
+    .trim();
+  const authorPart = withoutPrefix
+    .slice(lastQuoteIndex + 1)
+    .replace(/^[\s.,:;—-]+/, "")
+    .trim();
+
+  if (!quoteText || !authorPart) {
+    return null;
+  }
+
+  const [authorName, ...authorTitleParts] = authorPart.split(",");
+  const trimmedAuthorName = authorName?.trim();
+
+  if (!trimmedAuthorName) {
+    return null;
+  }
+
+  const authorTitle = authorTitleParts.join(",").trim();
+  const authorImage = getKnownQuoteAuthorImage(trimmedAuthorName);
+
+  return {
+    type: "quote",
+    text: quoteText,
+    authorName: trimmedAuthorName,
+    authorTitle: authorTitle || undefined,
+    authorImage,
+  };
+}
+
 function notionBlocksToContentBlocks(blocks: GuideStructureBlock[]): ContentBlock[] {
   const result: ContentBlock[] = [];
   let bulletItems: string[] = [];
@@ -142,9 +218,9 @@ function notionBlocksToContentBlocks(blocks: GuideStructureBlock[]): ContentBloc
     } else if (block.type === "text" && text) {
       result.push({ type: "paragraph", text });
     } else if (block.type === "callout" && text) {
-      result.push({ type: "callout", variant: "tip", text });
+      appendCallout(result, text);
     } else if (block.type === "quote" && text) {
-      result.push({ type: "quote", text });
+      result.push(parseStructuredQuote(text) ?? { type: "paragraph", text });
     } else if (block.type === "toggle" && text) {
       result.push({ type: "toggle", title: text });
     } else if (block.type === "table" && text) {
@@ -223,4 +299,13 @@ export function getGuideNavigation(
   const availableGuideSlugs = getGuideChapters(locale).map((chapter) => chapter.slug);
 
   return getGuideStructureNavigation(activeSlug, availableGuideSlugs, locale);
+}
+
+export function getGuideNavigationGroups(
+  activeSlug: string,
+  locale: GuideLocale = defaultGuideLocale,
+) {
+  const availableGuideSlugs = getGuideChapters(locale).map((chapter) => chapter.slug);
+
+  return getGuideStructureNavigationGroups(activeSlug, availableGuideSlugs, locale);
 }

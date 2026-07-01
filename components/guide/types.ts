@@ -98,4 +98,27 @@ export type GuideChapter = {
 
 export type GuideNavigationItem = Chapter & {
   active?: boolean;
+  description?: string;
+};
+
+export type GuideNavigationGroup = {
+  title: string;
+  items: GuideNavigationItem[];
+};
+
+export type GuideLanguageLink = {
+  locale: "ru" | "en";
+  label: string;
+  href: string;
+  active: boolean;
+  ariaLabel: string;
+};
+
+export type GuideThemeMode = "light" | "dark";
+
+export type GuideSearchItem = {
+  eyebrow: string;
+  href: string;
+  label: string;
+  type: "chapter" | "section";
 };
