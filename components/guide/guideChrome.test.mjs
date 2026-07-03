@@ -18,6 +18,10 @@ test("renders language and theme controls in the sidebar chrome", () => {
 });
 
 test("keeps sidebar links compact and chapter cards in docs reference structure", () => {
+  assert.doesNotMatch(navigationSource, /guide-nav-group-title/);
+  assert.doesNotMatch(navigationSource, /<h2 className="guide-nav-group-title"/);
+  assert.match(navigationSource, /navigationGroups\.flatMap/);
+  assert.doesNotMatch(cssSource, /\.guide-nav-group-title/);
   assert.match(cssSource, /\.guide-nav-list\s*\{[\s\S]*?gap: 0;/);
   assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?min-height: 40px;/);
   assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?padding: 10px 12px;/);
@@ -25,6 +29,7 @@ test("keeps sidebar links compact and chapter cards in docs reference structure"
   assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?font-weight: 400;/);
   assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?line-height: 20px;/);
   assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?letter-spacing: -0\.1px;/);
+  assert.match(cssSource, /\.guide-nav-link-label\s*\{[\s\S]*?-webkit-line-clamp: 2;/);
   assert.match(cssSource, /\.guide-nav-link\[data-active="true"\]\s*\{[\s\S]*?border-radius: var\(--figma-indent-space-8\);/);
   assert.match(shellSource, /className="article-chapter-title-row"/);
   assert.match(shellSource, /className="article-chapter-description"/);

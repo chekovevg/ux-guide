@@ -491,27 +491,27 @@ input {
   }
 
   .article-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--figma-indent-space-12);
-    padding-left: 24px;
+    display: block;
+    margin: 0;
+    padding: 0;
     color: var(--article-text);
     list-style-position: outside;
+  }
+
+  .article-list > li {
+    margin-inline-start: var(--figma-indent-space-24);
+  }
+
+  .article-list > li + li {
+    margin-top: var(--figma-indent-space-12);
   }
 
   .article-paragraph[data-terminal-colon="true"] + .article-list {
     margin-top: calc(-1 * var(--figma-indent-space-8));
   }
 
-  .article-paragraph-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--figma-indent-space-12);
-    color: var(--article-text);
-  }
-
-  .article-paragraph[data-terminal-colon="true"] + .article-paragraph-list {
-    margin-top: calc(-1 * var(--figma-indent-space-8));
+  .article-list-bulleted {
+    list-style-type: disc;
   }
 
   .article-list-numbered {
@@ -530,6 +530,35 @@ input {
 
   .article-link:hover {
     color: var(--figma-color-accent-600);
+  }
+
+  .article-example-card {
+    width: 100%;
+    border-radius: var(--radius-standard);
+    background: var(--surface-soft);
+    padding: var(--figma-indent-space-28) var(--figma-indent-padding-card);
+  }
+
+  .article-example-card-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--figma-indent-space-28);
+  }
+
+  .article-example-card-title {
+    color: var(--article-callout-text);
+    font-size: var(--type-body-size);
+    font-weight: 600;
+    line-height: var(--type-body-line);
+    letter-spacing: var(--figma-typography-letter-space-p);
+  }
+
+  .article-example-card-text {
+    color: var(--article-callout-text);
+    font-size: var(--type-body-size);
+    font-weight: 400;
+    line-height: var(--type-body-line);
+    letter-spacing: var(--figma-typography-letter-space-p);
   }
 
   .article-callout {
@@ -1365,24 +1394,7 @@ input {
     min-height: 0;
     flex: 1 1 auto;
     overflow-y: auto;
-    padding: 4px 14px 20px;
-  }
-
-  .guide-nav-group {
-    padding-top: 20px;
-  }
-
-  .guide-nav-group:first-child {
-    padding-top: 10px;
-  }
-
-  .guide-nav-group-title {
-    padding: 0 8px 9px;
-    color: var(--foreground);
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 16px;
-    text-transform: uppercase;
+    padding: 14px 14px 20px;
   }
 
   .guide-nav-list {
@@ -1409,10 +1421,15 @@ input {
   }
 
   .guide-nav-link-label {
+    display: -webkit-box;
     min-width: 0;
+    max-height: 40px;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
 
   .guide-nav-link:hover {

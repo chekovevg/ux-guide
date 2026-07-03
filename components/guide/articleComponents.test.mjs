@@ -11,6 +11,15 @@ const cssSource = await readFile(
   "utf8",
 );
 
+function cssRuleBody(selector) {
+  const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = cssSource.match(new RegExp(`${escapedSelector}\\s*\\{([\\s\\S]*?)\\}`));
+
+  assert.ok(match, `Expected CSS rule for ${selector}`);
+
+  return match[1];
+}
+
 test("renders clickable article heading links with hover icons", () => {
   assert.match(articleSource, /className="article-heading/);
   assert.match(articleSource, /className="article-heading-link/);
@@ -32,8 +41,13 @@ test("uses lucide icons instead of malformed exported Figma icon SVGs", () => {
 });
 
 test("maps callout, checklist, quote, and table blocks to Figma article component classes", () => {
+  const exampleCardTitleRule = cssRuleBody(".article-example-card-title");
+  const exampleCardTextRule = cssRuleBody(".article-example-card-text");
+
   assert.match(articleSource, /className=\{`article-callout article-callout-\$\{block\.variant\}`\}/);
   assert.match(articleSource, /className="article-callout-anchor/);
+  assert.match(articleSource, /<ArticleExampleCard block=\{block\} blockId=\{blockId\} \/>/);
+  assert.match(articleSource, /className="article-example-card"/);
   assert.match(articleSource, /const textParagraphs = block\.text/);
   assert.match(articleSource, /\.split\(\/\\n\{2,\}\/\)/);
   assert.match(articleSource, /className="article-checklist/);
@@ -47,6 +61,11 @@ test("maps callout, checklist, quote, and table blocks to Figma article componen
   assert.match(articleSource, /className="article-quote-author-title/);
   assert.match(articleSource, /className="article-table/);
   assert.match(cssSource, /\.article-callout/);
+  assert.match(cssSource, /\.article-example-card/);
+  assert.match(cssSource, /\.article-example-card\s*\{[\s\S]*?background: var\(--surface-soft\);/);
+  assert.match(cssSource, /\.article-example-card\s*\{[\s\S]*?padding: var\(--figma-indent-space-28\) var\(--figma-indent-padding-card\);/);
+  assert.match(exampleCardTitleRule, /color: var\(--article-callout-text\);/);
+  assert.match(exampleCardTextRule, /color: var\(--article-callout-text\);/);
   assert.match(cssSource, /\.article-checklist/);
   assert.match(cssSource, /\.article-checklist-title\s*\{[\s\S]*?letter-spacing: var\(--figma-typography-letter-space-h3\);/);
   assert.match(cssSource, /\.article-checklist-icon\s*\{[\s\S]*?border-radius: var\(--figma-indent-space-4\);/);
@@ -57,10 +76,28 @@ test("maps callout, checklist, quote, and table blocks to Figma article componen
   assert.match(cssSource, /\.article-table/);
 });
 
-test("renders Notion bullet groups as paragraph stacks without list indentation", () => {
+test("renders Notion bullet groups as semantic unordered lists", () => {
+  const listRule = cssRuleBody(".article-list");
+  const listItemRule = cssRuleBody(".article-list > li");
+  const listItemGapRule = cssRuleBody(".article-list > li + li");
+
   assert.match(articleSource, /case "bulletedList":/);
-  assert.match(articleSource, /className="article-paragraph-list"/);
-  assert.doesNotMatch(articleSource, /<ul className="article-list type-body"/);
-  assert.match(cssSource, /\.article-paragraph-list\s*\{/);
-  assert.match(cssSource, /\.article-paragraph\[data-terminal-colon="true"\] \+ \.article-paragraph-list/);
+  assert.match(articleSource, /<ul className="article-list article-list-bulleted type-body">/);
+  assert.match(articleSource, /<li key=\{item\}>\{item\}<\/li>/);
+  assert.doesNotMatch(articleSource, /className="article-paragraph-list"/);
+  assert.match(listRule, /display: block;/);
+  assert.match(listRule, /padding: 0;/);
+  assert.doesNotMatch(listRule, /padding-left:/);
+  assert.match(listItemRule, /margin-inline-start: var\(--figma-indent-space-24\);/);
+  assert.match(listItemGapRule, /margin-top: var\(--figma-indent-space-12\);/);
+  assert.match(cssSource, /\.article-list-bulleted\s*\{[\s\S]*?list-style-type: disc;/);
+  assert.match(cssSource, /\.article-paragraph\[data-terminal-colon="true"\] \+ \.article-list/);
+});
+
+test("localizes callout badges and keeps Help Center as a real link", () => {
+  assert.match(articleSource, /const calloutBadgeLabel = isEnglish \? "Tip" : "Совет";/);
+  assert.match(articleSource, /calloutBadgeLabel=\{calloutBadgeLabel\}/);
+  assert.doesNotMatch(articleSource, /Pro-tip/);
+  assert.match(articleSource, /<a\s+className="article-update-help-link"/);
+  assert.match(articleSource, /href=\{helpHref\}/);
 });

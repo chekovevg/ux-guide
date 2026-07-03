@@ -187,7 +187,7 @@ export function MobileSiteMenu({
                         onClose();
                       }}
                     >
-                      {getNavigationLabel(item.slug, item.title)}
+                      {getNavigationLabel(item.slug, item.title, item.navTitle)}
                     </a>
                   </li>
                 ))}

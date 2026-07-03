@@ -61,6 +61,8 @@ export function GuideNavigation({
     );
   }
 
+  const navigationItems = navigationGroups.flatMap((group) => group.items);
+
   return (
     <div className="guide-sidebar">
       <div className="guide-sidebar-top">
@@ -100,32 +102,29 @@ export function GuideNavigation({
       </div>
 
       <nav aria-label="Guide chapters" className="guide-sidebar-nav">
-        {navigationGroups.map((group) => (
-          <section className="guide-nav-group" key={group.title}>
-            <h2 className="guide-nav-group-title">{group.title}</h2>
-            <ol className="guide-nav-list">
-              {group.items.map((item) => (
-                <li key={item.slug}>
-                  <a
-                    aria-current={item.active ? "page" : undefined}
-                    aria-disabled={!item.available ? true : undefined}
-                    className="guide-nav-link"
-                    data-active={item.active ? "true" : undefined}
-                    data-disabled={!item.available ? "true" : undefined}
-                    href={item.available ? getGuideChapterHref(item.slug, basePath) : "#"}
-                    onClick={(event) => {
-                      if (!item.available) {
-                        event.preventDefault();
-                      }
-                    }}
-                  >
-                    <span className="guide-nav-link-label">{getNavigationLabel(item.slug, item.title)}</span>
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </section>
-        ))}
+        <ol className="guide-nav-list">
+          {navigationItems.map((item) => (
+            <li key={item.slug}>
+              <a
+                aria-current={item.active ? "page" : undefined}
+                aria-disabled={!item.available ? true : undefined}
+                className="guide-nav-link"
+                data-active={item.active ? "true" : undefined}
+                data-disabled={!item.available ? "true" : undefined}
+                href={item.available ? getGuideChapterHref(item.slug, basePath) : "#"}
+                onClick={(event) => {
+                  if (!item.available) {
+                    event.preventDefault();
+                  }
+                }}
+              >
+                <span className="guide-nav-link-label">
+                  {getNavigationLabel(item.slug, item.title, item.navTitle)}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ol>
       </nav>
 
       <GuideSidebarFooter

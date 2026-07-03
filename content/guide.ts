@@ -84,14 +84,67 @@ function appendGroupedList(
 }
 
 function appendCallout(result: ContentBlock[], text: string) {
-  const previousBlock = result[result.length - 1];
+  result.push(parseNotionCallout(text));
+}
 
-  if (previousBlock?.type === "callout" && previousBlock.variant === "tip") {
-    previousBlock.text = `${previousBlock.text}\n\n${text}`;
-    return;
+function parseProTipCallout(text: string): Extract<ContentBlock, { type: "callout" }> | null {
+  const proTipMatch = text.match(/^Pro[- ]tip:?\s*/i);
+
+  if (!proTipMatch) {
+    return null;
   }
 
-  result.push({ type: "callout", variant: "tip", text });
+  return {
+    type: "callout",
+    variant: "tip",
+    text: text.slice(proTipMatch[0].length).trim() || text,
+  };
+}
+
+function parseNotionCallout(text: string): Extract<ContentBlock, { type: "callout" }> {
+  const proTip = parseProTipCallout(text);
+
+  if (proTip) {
+    return proTip;
+  }
+
+  const knownPrefixes: Array<{
+    prefix: string;
+    title?: string;
+    variant: Extract<ContentBlock, { type: "callout" }>["variant"];
+  }> = [
+    { prefix: "Пример с рынка", title: "Пример с рынка", variant: "example" },
+    { prefix: "Пример сценария", title: "Пример сценария", variant: "example" },
+    { prefix: "Примеры задач", title: "Примеры задач", variant: "example" },
+    { prefix: "Примеры гипотез", title: "Примеры гипотез", variant: "example" },
+    {
+      prefix: "Примеры исследовательских вопросов",
+      title: "Примеры исследовательских вопросов",
+      variant: "example",
+    },
+    { prefix: "Market example", title: "Market example", variant: "example" },
+    { prefix: "Scenario example", title: "Scenario example", variant: "example" },
+    { prefix: "Example tasks", title: "Example tasks", variant: "example" },
+    { prefix: "Example hypotheses", title: "Example hypotheses", variant: "example" },
+    { prefix: "Example research questions", title: "Example research questions", variant: "example" },
+  ];
+
+  for (const { prefix, title, variant } of knownPrefixes) {
+    if (!text.startsWith(prefix)) {
+      continue;
+    }
+
+    const calloutText = text.slice(prefix.length).trim();
+
+    return {
+      type: "callout",
+      variant,
+      title,
+      text: calloutText || text,
+    };
+  }
+
+  return { type: "callout", variant: "example", text };
 }
 
 function getKnownQuoteAuthorImage(
@@ -264,6 +317,7 @@ function structureChapterToGuideChapter(
   return {
     slug: chapter.slug,
     title: chapter.title,
+    navTitle: chapter.navTitle,
     updatedAt: formatCapturedAt(getGuideStructure(locale).source.capturedAt, locale),
     coverImage:
       coverImages[chapter.slug]?.[locale] ??

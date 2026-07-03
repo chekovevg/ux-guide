@@ -8,6 +8,7 @@ const navigation = [
   {
     slug: "zachem-tratit-vremya-na-issledovaniya",
     title: "Source why research",
+    navTitle: "Short why",
     available: true,
   },
   {
@@ -70,7 +71,7 @@ test("builds the mobile contents list in the guide chapter order", () => {
     items.map((item) => item.label),
     [
       "Source intro",
-      "Source why research",
+      "Short why",
       "Source resistance",
       "Source remote research",
       "Source study setup",

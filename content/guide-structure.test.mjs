@@ -171,6 +171,53 @@ test("keeps the default Russian structure as the localized RU baseline", () => {
   );
 });
 
+test("keeps short Russian navigation titles separate from full chapter titles", () => {
+  const navTitles = Object.fromEntries(
+    ruStructure.chapters.map((chapter) => [chapter.slug, chapter.navTitle]),
+  );
+  const fullTitles = Object.fromEntries(
+    ruStructure.chapters.map((chapter) => [chapter.slug, chapter.title]),
+  );
+
+  assert.equal(navTitles.intro, "Интро");
+  assert.equal(
+    navTitles["zachem-tratit-vremya-na-issledovaniya"],
+    "Зачем исследования",
+  );
+  assert.equal(
+    navTitles["soprotivlenie-issledovaniyam-i-kak-s-etim-rabotat"],
+    "Возражения",
+  );
+  assert.equal(navTitles["ob-udalennyh-issledovaniyah"], "Удалённые исследования");
+  assert.equal(navTitles["gotovimsya-k-issledovaniyu"], "Подготовка");
+  assert.equal(
+    navTitles["chek-list-o-chem-esche-podumat-pered-zapuskom"],
+    "Чек-лист запуска",
+  );
+  assert.equal(
+    navTitles["auditoriya-kak-vybrat-i-poschitat-nuzhnoe-kolichestvo"],
+    "Аудитория и выборка",
+  );
+  assert.equal(navTitles["metody-kak-vybrat-i-zapustit"], "Методы");
+  assert.equal(
+    navTitles["prototipy-kakie-byvayut-i-kak-podgotovit-k-testirovaniyu"],
+    "Прототипы",
+  );
+  assert.equal(navTitles["kak-rabotat-s-rezultatami"], "Результаты");
+  assert.equal(
+    navTitles["chto-uchest-prezhde-chem-delat-vyvody"],
+    "Перед выводами",
+  );
+  assert.equal(
+    navTitles["kak-vystroit-vse-tak-chtoby-pomogat-issledovaniyami-biznesu"],
+    "Research Ops / Процесс",
+  );
+  assert.equal(
+    fullTitles["soprotivlenie-issledovaniyam-i-kak-s-etim-rabotat"],
+    "Сопротивление исследованиям, и как с этим работать",
+  );
+});
+
 test("ships a structurally equivalent English guide structure", async () => {
   const enStructure = await readJsonIfExists("./guide-structure.en.json");
 
@@ -224,7 +271,12 @@ test("keeps guide content out of the data adapter hardcode", async () => {
   const guideSource = await readFile(new URL("./guide.ts", import.meta.url), "utf8");
 
   assert.match(guideSource, /function appendCallout/);
-  assert.match(guideSource, /previousBlock\.text = `\$\{previousBlock\.text\}\\n\\n\$\{text\}`/);
+  assert.match(guideSource, /parseNotionCallout\(text\)/);
+  assert.match(guideSource, /function parseProTipCallout/);
+  assert.match(guideSource, /title: "Пример с рынка"/);
+  assert.match(guideSource, /variant: "example"/);
+  assert.match(guideSource, /return \{ type: "callout", variant: "example", text \};/);
+  assert.doesNotMatch(guideSource, /return \{ type: "callout", variant: "tip", text \};/);
   assert.doesNotMatch(guideSource, /resistanceIntro/);
   assert.doesNotMatch(guideSource, /resistanceSections/);
   assert.doesNotMatch(guideSource, /Resistance to research/);

@@ -4,6 +4,9 @@ import { ArrowLeft, ArrowRight, Check, Link as LucideLink } from "lucide-react";
 import type { ContentBlock, GuideChapter, GuideSection } from "./types";
 
 export function ArticleContent({ chapter }: { chapter: GuideChapter }) {
+  const isEnglish = chapter.updatedAt?.startsWith("Updated") ?? false;
+  const calloutBadgeLabel = isEnglish ? "Tip" : "Совет";
+
   return (
     <>
       <Hero chapter={chapter} />
@@ -14,6 +17,7 @@ export function ArticleContent({ chapter }: { chapter: GuideChapter }) {
               key={`${chapter.slug}-${index}`}
               block={block}
               blockId={`${chapter.slug}-block-${index + 1}`}
+              calloutBadgeLabel={calloutBadgeLabel}
               checklistTitle={block.type === "todoList" ? chapter.title : undefined}
               checklistAccentItemIndex={block.type === "todoList" ? 4 : undefined}
             />
@@ -21,7 +25,11 @@ export function ArticleContent({ chapter }: { chapter: GuideChapter }) {
         </div>
       ) : null}
       {chapter.sections.map((section) => (
-        <GuideSectionView key={section.id} section={section} />
+        <GuideSectionView
+          key={section.id}
+          calloutBadgeLabel={calloutBadgeLabel}
+          section={section}
+        />
       ))}
       {chapter.updatedAt ? (
         <ArticleUpdateStatus updatedAt={chapter.updatedAt} />
@@ -54,9 +62,11 @@ function Hero({ chapter }: { chapter: GuideChapter }) {
 }
 
 function GuideSectionView({
+  calloutBadgeLabel,
   section,
   depth = 0,
 }: {
+  calloutBadgeLabel: string;
   section: GuideSection;
   depth?: number;
 }) {
@@ -97,6 +107,7 @@ function GuideSectionView({
               key={`${section.id}-${index}`}
               block={block}
               blockId={`${section.id}-block-${index + 1}`}
+              calloutBadgeLabel={calloutBadgeLabel}
             />
           ))}
         </div>
@@ -104,7 +115,12 @@ function GuideSectionView({
       {section.children?.length ? (
         <div className={depth === 0 ? "mt-10 flex flex-col gap-8" : "mt-8 flex flex-col gap-6"}>
           {section.children.map((child) => (
-            <GuideSectionView key={child.id} section={child} depth={depth + 1} />
+            <GuideSectionView
+              key={child.id}
+              calloutBadgeLabel={calloutBadgeLabel}
+              section={child}
+              depth={depth + 1}
+            />
           ))}
         </div>
       ) : null}
@@ -115,11 +131,13 @@ function GuideSectionView({
 function ContentBlockView({
   block,
   blockId,
+  calloutBadgeLabel,
   checklistTitle,
   checklistAccentItemIndex,
 }: {
   block: ContentBlock;
   blockId: string;
+  calloutBadgeLabel: string;
   checklistTitle?: string;
   checklistAccentItemIndex?: number;
 }) {
@@ -136,16 +154,24 @@ function ContentBlockView({
         </p>
       );
     case "callout":
-      return <ArticleCallout block={block} blockId={blockId} />;
+      if (block.variant === "example") {
+        return <ArticleExampleCard block={block} blockId={blockId} />;
+      }
+
+      return (
+        <ArticleCallout
+          block={block}
+          blockId={blockId}
+          calloutBadgeLabel={calloutBadgeLabel}
+        />
+      );
     case "bulletedList":
       return (
-        <div className="article-paragraph-list">
+        <ul className="article-list article-list-bulleted type-body">
           {block.items.map((item) => (
-            <p key={item} className="article-paragraph type-body">
-              {item}
-            </p>
+            <li key={item}>{item}</li>
           ))}
-        </div>
+        </ul>
       );
     case "numberedList":
       return (
@@ -285,12 +311,45 @@ function ContentBlockView({
   }
 }
 
-function ArticleCallout({
+function ArticleExampleCard({
   block,
   blockId,
 }: {
   block: Extract<ContentBlock, { type: "callout" }>;
   blockId: string;
+}) {
+  const textParagraphs = block.text
+    .split(/\n{2,}/)
+    .map((text) => text.trim())
+    .filter(Boolean);
+
+  return (
+    <aside id={blockId} className="article-example-card">
+      <div className="article-example-card-stack">
+        {block.title ? <p className="article-example-card-title">{block.title}</p> : null}
+        {textParagraphs.map((text, index) => (
+          <p key={`${blockId}-text-${index + 1}`} className="article-example-card-text">
+            {text}
+          </p>
+        ))}
+        {block.href && block.linkLabel ? (
+          <a className="article-link article-example-card-link" href={block.href}>
+            {block.linkLabel}
+          </a>
+        ) : null}
+      </div>
+    </aside>
+  );
+}
+
+function ArticleCallout({
+  block,
+  blockId,
+  calloutBadgeLabel,
+}: {
+  block: Extract<ContentBlock, { type: "callout" }>;
+  blockId: string;
+  calloutBadgeLabel: string;
 }) {
   const isTip = block.variant === "tip";
   const linkHref = block.href ?? `#${blockId}`;
@@ -303,7 +362,7 @@ function ArticleCallout({
     <aside id={blockId} className={`article-callout article-callout-${block.variant}`}>
       <div className="article-callout-content">
         <div className={isTip ? "article-callout-stack article-callout-stack-tip" : "article-callout-stack"}>
-          {isTip ? <p className="article-callout-badge">Pro-tip</p> : null}
+          {isTip ? <p className="article-callout-badge">{calloutBadgeLabel}</p> : null}
           {block.title ? <p className="article-callout-title">{block.title}</p> : null}
           {textParagraphs.map((text, index) => (
             <p key={`${blockId}-text-${index + 1}`} className="article-callout-text">
@@ -439,6 +498,7 @@ function ArticleQuote({
 
 function ArticleUpdateStatus({ updatedAt }: { updatedAt: string }) {
   const isEnglish = updatedAt.startsWith("Updated");
+  const helpHref = "https://pathway.zendesk.com/hc/en-us";
   const helpText = isEnglish
     ? "Have questions about the platform?"
     : "Есть вопросы о платформе?";
@@ -450,7 +510,9 @@ function ArticleUpdateStatus({ updatedAt }: { updatedAt: string }) {
     <footer className="article-update-status" aria-label="Guide update status">
       <p className="article-update-help">
         <span>{helpText}</span>
-        <span className="article-update-help-link">{helpLinkText}</span>
+        <a className="article-update-help-link" href={helpHref}>
+          {helpLinkText}
+        </a>
       </p>
       <p className="article-update-date">
         <TimeCircleIcon />

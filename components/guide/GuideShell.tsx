@@ -65,7 +65,8 @@ export function GuideShell({
   const activeLink =
     activeLinkIndex >= 0 ? sectionLinks[activeLinkIndex] : sectionLinks[0];
   const activeSectionTitle =
-    activeLink?.title ?? getNavigationLabel(chapter.slug, chapter.title);
+    activeLink?.title ??
+    getNavigationLabel(chapter.slug, chapter.title, chapter.navTitle);
   const tocProgress = sectionLinks.length
     ? ((Math.max(activeLinkIndex, 0) + 1) / sectionLinks.length) * 100
     : 0;
@@ -81,6 +82,11 @@ export function GuideShell({
     () => getAdjacentNavigation(flatNavigation),
     [flatNavigation],
   );
+  const chapterNavLabel = getNavigationLabel(
+    chapter.slug,
+    chapter.title,
+    chapter.navTitle,
+  );
   const searchItems = useMemo(
     () => [
       ...flatNavigation
@@ -88,17 +94,17 @@ export function GuideShell({
         .map((item) => ({
           eyebrow: chapterSearchLabel,
           href: getChapterHref(item.slug, chapterBasePath),
-          label: getNavigationLabel(item.slug, item.title),
+          label: getNavigationLabel(item.slug, item.title, item.navTitle),
           type: "chapter" as const,
         })),
       ...sectionLinks.map((item) => ({
-        eyebrow: chapter.title,
+        eyebrow: chapterNavLabel,
         href: `#${item.id}`,
         label: item.title,
         type: "section" as const,
       })),
     ],
-    [chapter.title, chapterBasePath, chapterSearchLabel, flatNavigation, sectionLinks],
+    [chapterBasePath, chapterNavLabel, chapterSearchLabel, flatNavigation, sectionLinks],
   );
 
   useEffect(() => {
@@ -456,7 +462,7 @@ function ArticleChapterNavigation({
         <a className="article-chapter-card" href={getChapterHref(previous.slug, basePath)}>
           <span className="article-chapter-title-row">
             <ChapterNavIcon direction="previous" />
-            <span>{getNavigationLabel(previous.slug, previous.title)}</span>
+            <span>{getNavigationLabel(previous.slug, previous.title, previous.navTitle)}</span>
           </span>
           {previous.description ? (
             <span className="article-chapter-description">{previous.description}</span>
@@ -468,7 +474,7 @@ function ArticleChapterNavigation({
       {next ? (
         <a className="article-chapter-card article-chapter-card-next" href={getChapterHref(next.slug, basePath)}>
           <span className="article-chapter-title-row article-chapter-title-row-next">
-            <span>{getNavigationLabel(next.slug, next.title)}</span>
+            <span>{getNavigationLabel(next.slug, next.title, next.navTitle)}</span>
             <ChapterNavIcon direction="next" />
           </span>
           {next.description ? (

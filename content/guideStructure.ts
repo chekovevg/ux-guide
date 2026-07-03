@@ -13,6 +13,7 @@ export const availableGuideLocales = ["ru", "en"] as const;
 export type GuideStructureHeading = {
   slug: string;
   title: string;
+  navTitle?: string;
   level: 1 | 2 | 3;
   notionBlockType: "header" | "sub_header" | "sub_sub_header";
   sourceBlockIndex: number;
@@ -169,6 +170,7 @@ export function getGuideStructureNavigation(
     .map((chapter) => ({
       slug: chapter.slug,
       title: chapter.title,
+      navTitle: chapter.navTitle,
       description: getHeadingDescription(chapter),
       available: available.has(chapter.slug),
       active: chapter.slug === activeSlug,

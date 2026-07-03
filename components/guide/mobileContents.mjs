@@ -17,8 +17,8 @@ const mobileContentsOrderBySlug = new Map(
   mobileContentsSlugOrder.map((slug, index) => [slug, index]),
 );
 
-export function getNavigationLabel(slug, fallback) {
-  return fallback;
+export function getNavigationLabel(slug, fallback, navTitle) {
+  return navTitle || fallback;
 }
 
 export function getGuideChapterHref(slug, basePath = "/guide") {
@@ -44,6 +44,6 @@ export function getMobileContentsItems(navigation, basePath = "/guide") {
       ...item,
       active: item.active === true,
       href: item.available ? getGuideChapterHref(item.slug, basePath) : "#",
-      label: getNavigationLabel(item.slug, item.title),
+      label: getNavigationLabel(item.slug, item.title, item.navTitle),
     }));
 }

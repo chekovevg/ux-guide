@@ -9,6 +9,7 @@ export type MobileContentsItem = GuideNavigationItem & {
 export declare function getNavigationLabel(
   slug: string,
   fallback: string,
+  navTitle?: string,
 ): string;
 
 export declare function getGuideChapterHref(

@@ -1,6 +1,7 @@
 export type Chapter = {
   slug: string;
   title: string;
+  navTitle?: string;
   available: boolean;
 };
 
@@ -88,6 +89,7 @@ export type GuideSection = {
 export type GuideChapter = {
   slug: string;
   title: string;
+  navTitle?: string;
   subtitle?: string;
   updatedAt?: string;
   readTime?: string;
