@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Аудит версий Wynde UX Research Guide</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #24292f; background: #f6f8fa; }
+    * { box-sizing: border-box; }
+    body { margin: 0; line-height: 1.65; }
+    main { max-width: 960px; margin: 0 auto; padding: 56px 28px 96px; background: #fff; }
+    h1 { font-size: clamp(32px, 5vw, 48px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -.035em; }
+    h2 { margin-top: 52px; font-size: 27px; line-height: 1.2; }
+    h3 { margin-top: 32px; font-size: 20px; }
+    p, li, td, th { font-size: 16px; }
+    a { color: #0550ae; }
+    code { padding: 2px 5px; border-radius: 5px; background: #eef1f4; font: 0.92em ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .lede { color: #57606a; font-size: 19px; max-width: 760px; }
+    .callout { margin: 28px 0; padding: 18px 20px; border: 1px solid #b6e3ff; border-radius: 10px; background: #ddf4ff; }
+    .gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    figure { margin: 22px 0; }
+    .gallery figure { margin: 0; }
+    img { display: block; width: 100%; height: auto; border: 1px solid #d8dee4; border-radius: 10px; box-shadow: 0 10px 28px rgba(31,35,40,.1); }
+    figcaption { margin-top: 8px; color: #6e7781; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; margin: 22px 0; }
+    th, td { padding: 12px; border: 1px solid #d8dee4; vertical-align: top; text-align: left; }
+    th { background: #f6f8fa; }
+    .severity { padding: 16px 18px; border-left: 4px solid #cf222e; background: #ffebe9; }
+    pre { overflow: auto; padding: 18px; border-radius: 10px; background: #161b22; color: #e6edf3; }
+    .muted { color: #6e7781; }
+    @media (max-width: 720px) { main { padding: 32px 18px 72px; } .gallery { grid-template-columns: 1fr; } table { display: block; overflow-x: auto; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Аудит версий Wynde UX Research Guide</h1>
+  <p class="muted">10 июля 2026</p>
+  <p class="lede">Отдельной «лучшей свежей ветки» сейчас нет: все локальные branch refs указывают на <code>1a18423</code>, а свежий design-system существует только как dirty working-tree patch.</p>
+
+  <section class="callout">
+    <strong>Вердикт:</strong> использовать <code>main@1a18423</code> как canonical base. Из свежего patch сохранить вынос <code>ArticleBlocks.tsx</code>, вернуть desktop-группы из <code>1f2141b</code> и пересобрать semantic tokens поверх Figma/Wynde source of truth.
+  </section>
+
+  <h2>Current vs main</h2>
+  <div class="gallery">
+    <figure><img src="references/current.png" alt="Текущий design-system candidate" /><figcaption>Dirty candidate: почти прежний shell, Primer-like palette.</figcaption></figure>
+    <figure><img src="references/baseline-main-1a18423.png" alt="Main at 1a18423" /><figcaption>Main: тот же набор interaction surfaces и композиция.</figcaption></figure>
+    <figure><img src="references/current-mobile.png" alt="Текущий candidate на mobile" /><figcaption>Candidate, 390×844.</figcaption></figure>
+    <figure><img src="references/baseline-main-mobile-1a18423.png" alt="Main на mobile" /><figcaption>Main, 390×844.</figcaption></figure>
+  </div>
+
+  <h2>Сравнение версий</h2>
+  <table>
+    <thead><tr><th>Версия</th><th>Интерактивность</th><th>UI / IA</th><th>Вердикт</th></tr></thead>
+    <tbody>
+      <tr><td><code>9365db5</code></td><td>Начальная, часть chrome — заглушки</td><td>Generic и слабо связана с guide use case</td><td>Не использовать</td></tr>
+      <tr><td><code>1f2141b</code></td><td>Search, collapse, theme, mobile states</td><td>Лучшее desktop-группирование</td><td>Источник отдельных решений</td></tr>
+      <tr><td><code>1a18423</code></td><td>Самая полная committed функциональность</td><td>Desktop IA уплощена</td><td>База</td></tr>
+      <tr><td>Dirty patch</td><td>Почти без нового поведения</td><td>Primer-like reskin</td><td>Не принимать wholesale</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Ключевые проблемы</h2>
+  <div class="severity"><strong>Blocker:</strong> design-system branches не содержат разных commits. Сначала нужен snapshot/commit текущего patch, иначе сравнение веток фиктивно.</div>
+
+  <h3>Visual update почти не материализовался</h3>
+  <p>Скриншоты показывают одинаковую геометрию, content hierarchy и interaction surfaces. Patch в основном заменяет CSS variables и button wrappers, поэтому выглядит как слегка перекрашенный main.</p>
+
+  <h3>Token layer обходит Figma</h3>
+  <p>Новый CSS вручную задаёт GitHub/Primer-подобную палитру и fixed 32/24 px typography, тогда как Figma export хранит Wynde desktop 40/30 px и mobile 28/22 px. Semantic tokens должны alias'ить Figma values, а не создавать параллельный источник истины.</p>
+
+  <h3>Разная desktop/mobile IA</h3>
+  <p>Desktop flatten'ит четыре группы в один список, mobile сохраняет заголовки. Сильные docs products держат явную иерархию.</p>
+  <div class="gallery">
+    <figure><img src="references/mintlify-navigation-live.png" alt="Mintlify navigation" /><figcaption>Mintlify: group headings, active state, description, right ToC.</figcaption></figure>
+    <figure><img src="references/docusaurus-sidebar-live.png" alt="Docusaurus sidebar" /><figcaption>Docusaurus: nested tree, breadcrumbs, right ToC.</figcaption></figure>
+  </div>
+
+  <h3>Rich blocks не питаются реальными данными</h3>
+  <ul>
+    <li>Неопознанные callouts превращаются в один example variant.</li>
+    <li>Toggle импортируется без body.</li>
+    <li>Tables деградируют в raw paragraph.</li>
+    <li>Steps, pathway, related и templates почти недостижимы из текущего adapter pipeline.</li>
+  </ul>
+
+  <h3>Интерактивность хрупкая</h3>
+  <p>Большой client shell владеет шестью состояниями, поиском, overlays, theme и observer. Internal navigation использует обычные anchors; dialogs не имеют focus containment/restore. Ручная проверка нашла общий дефект: sticky top ToC перекрывает collapsed rail, делая Expand sidebar недоступным для pointer hit.</p>
+
+  <h2>Рекомендуемый целевой shell</h2>
+  <pre>┌───────────────┬──────────────────────────────┬──────────────┐
+│ Wynde + search│ eyebrow / breadcrumb         │ On this page │
+│ НАЧАЛО        │ H1 + chapter intro           │ active H2    │
+│ • Интро       │ semantic article blocks      │ nested H3    │
+│ ПОДГОТОВКА    │ examples / checks / template │              │
+│ • Чек-лист    │ previous / next              │              │
+└───────────────┴──────────────────────────────┴──────────────┘</pre>
+
+  <h2>Следующие шаги</h2>
+  <ol>
+    <li>Зафиксировать dirty patch отдельным snapshot/commit.</li>
+    <li>Взять <code>1a18423</code> как базу; вернуть grouped desktop navigation и сохранить ArticleBlocks extraction.</li>
+    <li>Пересобрать tokens как Wynde semantic aliases поверх Figma export.</li>
+    <li>Исправить lossy content mapping до дальнейшей полировки карточек.</li>
+    <li>Добавить browser tests для focus, search keyboard UX, collapse hit testing, RU/EN и 390/1280/1440 breakpoints.</li>
+  </ol>
+
+  <h2>Проверка</h2>
+  <ul>
+    <li>Git refs/reflogs/remote/merge-base и file-level diff.</li>
+    <li>Current/main desktop 1280×720 и mobile 390×844.</li>
+    <li>Search/filter, mobile menu/contents, theme и collapse hit testing.</li>
+    <li>33/33 tests; lint, typecheck и git diff check прошли.</li>
+    <li>Lazyweb quick search: strong coverage, top similarity 0.61. Hosted report остановился на внешнем HTTP 429.</li>
+  </ul>
+
+  <h2>Источники</h2>
+  <ul>
+    <li><a href="https://www.mintlify.com/docs/organize/navigation">Mintlify navigation</a></li>
+    <li><a href="https://mintlify.com/docs/pages">Mintlify pages</a></li>
+    <li><a href="https://docusaurus.io/docs/sidebar">Docusaurus sidebar</a></li>
+    <li><a href="https://gitbook.com/docs/publishing-documentation/site-structure">GitBook site structure</a></li>
+  </ul>
+</main>
+</body>
+</html>

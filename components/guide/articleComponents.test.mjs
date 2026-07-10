@@ -6,10 +6,15 @@ const articleSource = await readFile(
   new URL("./ArticleContent.tsx", import.meta.url),
   "utf8",
 );
+const articleBlocksSource = await readFile(
+  new URL("./ArticleBlocks.tsx", import.meta.url),
+  "utf8",
+);
 const cssSource = await readFile(
   new URL("../../app/globals.css", import.meta.url),
   "utf8",
 );
+const articleComponentSource = `${articleSource}\n${articleBlocksSource}`;
 
 function cssRuleBody(selector) {
   const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -32,48 +37,55 @@ test("renders clickable article heading links with hover icons", () => {
 });
 
 test("uses lucide icons instead of malformed exported Figma icon SVGs", () => {
-  assert.match(articleSource, /import \{[^}]*\bCheck\b[^}]*\bLink as LucideLink\b[^}]*\} from "lucide-react"/s);
-  assert.match(articleSource, /<LucideLink aria-hidden="true"/);
-  assert.match(articleSource, /<Check className="size-3" strokeWidth=\{3\}/);
-  assert.doesNotMatch(articleSource, /\/figma\/icon-link-heading\.svg/);
-  assert.doesNotMatch(articleSource, /\/figma\/icon-link-callout\.svg/);
-  assert.doesNotMatch(articleSource, /\/figma\/icon-checkbox-checked\.svg/);
+  assert.match(articleComponentSource, /import \{[^}]*\bCheck\b[^}]*\bLink as LucideLink\b[^}]*\} from "lucide-react"/s);
+  assert.match(articleComponentSource, /<LucideLink aria-hidden="true"/);
+  assert.match(articleComponentSource, /<Check className="size-3" strokeWidth=\{3\}/);
+  assert.doesNotMatch(articleComponentSource, /\/figma\/icon-link-heading\.svg/);
+  assert.doesNotMatch(articleComponentSource, /\/figma\/icon-link-callout\.svg/);
+  assert.doesNotMatch(articleComponentSource, /\/figma\/icon-checkbox-checked\.svg/);
 });
 
-test("maps callout, checklist, quote, and table blocks to Figma article component classes", () => {
-  const exampleCardTitleRule = cssRuleBody(".article-example-card-title");
-  const exampleCardTextRule = cssRuleBody(".article-example-card-text");
+test("maps semantic article blocks to the guide design-system layer", () => {
+  const exampleCardRule = cssRuleBody(".article-example-card");
+  const calloutRule = cssRuleBody(".article-callout-content");
+  const checklistRule = cssRuleBody(".article-checklist");
+  const quoteRule = cssRuleBody(".article-quote");
+  const tableRule = cssRuleBody(".article-table");
 
-  assert.match(articleSource, /className=\{`article-callout article-callout-\$\{block\.variant\}`\}/);
-  assert.match(articleSource, /className="article-callout-anchor/);
+  assert.match(articleSource, /from "\.\/ArticleBlocks"/);
+  assert.match(articleBlocksSource, /export function ArticleCallout/);
+  assert.match(articleBlocksSource, /export function ArticleTable/);
+  assert.match(articleBlocksSource, /data-kind="example"/);
+  assert.match(articleBlocksSource, /const calloutKind = block\.variant === "warning" \? "warning" : isTip \? "tip" : "note";/);
+  assert.match(articleBlocksSource, /data-kind=\{calloutKind\}/);
   assert.match(articleSource, /<ArticleExampleCard block=\{block\} blockId=\{blockId\} \/>/);
-  assert.match(articleSource, /className="article-example-card"/);
-  assert.match(articleSource, /const textParagraphs = block\.text/);
-  assert.match(articleSource, /\.split\(\/\\n\{2,\}\/\)/);
-  assert.match(articleSource, /className="article-checklist/);
-  assert.match(articleSource, /checklistTitle=\{block\.type === "todoList" \? chapter\.title : undefined\}/);
-  assert.match(articleSource, /checklistAccentItemIndex=\{block\.type === "todoList" \? 4 : undefined\}/);
-  assert.match(articleSource, /className="article-checklist-text"/);
-  assert.match(articleSource, /data-accent=\{index === accentItemIndex \? "true" : undefined\}/);
-  assert.match(articleSource, /className="article-quote/);
-  assert.match(articleSource, /className="article-quote-avatar/);
-  assert.match(articleSource, /className="article-quote-author-name/);
-  assert.match(articleSource, /className="article-quote-author-title/);
-  assert.match(articleSource, /className="article-table/);
-  assert.match(cssSource, /\.article-callout/);
-  assert.match(cssSource, /\.article-example-card/);
-  assert.match(cssSource, /\.article-example-card\s*\{[\s\S]*?background: var\(--surface-soft\);/);
-  assert.match(cssSource, /\.article-example-card\s*\{[\s\S]*?padding: var\(--figma-indent-space-28\) var\(--figma-indent-padding-card\);/);
-  assert.match(exampleCardTitleRule, /color: var\(--article-callout-text\);/);
-  assert.match(exampleCardTextRule, /color: var\(--article-callout-text\);/);
-  assert.match(cssSource, /\.article-checklist/);
-  assert.match(cssSource, /\.article-checklist-title\s*\{[\s\S]*?letter-spacing: var\(--figma-typography-letter-space-h3\);/);
-  assert.match(cssSource, /\.article-checklist-icon\s*\{[\s\S]*?border-radius: var\(--figma-indent-space-4\);/);
-  assert.match(cssSource, /\.article-checklist-icon\s*\{[\s\S]*?background: var\(--accent\);/);
-  assert.match(cssSource, /\.article-checklist-text\s*\{[\s\S]*?padding-top: var\(--figma-indent-space-4\);/);
-  assert.match(cssSource, /\.article-checklist-text\[data-accent="true"\]\s*\{[\s\S]*?color: var\(--accent\);/);
-  assert.match(cssSource, /\.article-quote/);
-  assert.match(cssSource, /\.article-table/);
+  assert.match(articleSource, /<ArticleQuote block=\{block\} \/>/);
+  assert.match(articleSource, /<ArticleTable block=\{block\} \/>/);
+  assert.match(exampleCardRule, /border: var\(--ds-border-width\) solid var\(--guide-callout-example-border\);/);
+  assert.match(exampleCardRule, /background: var\(--guide-callout-example-bg\);/);
+  assert.match(exampleCardRule, /padding: var\(--guide-article-card-padding\);/);
+  assert.match(calloutRule, /border-left-width: 4px;/);
+  assert.match(calloutRule, /background: var\(--guide-callout-note-bg\);/);
+  assert.match(cssSource, /\.article-callout\[data-kind="tip"\] \.article-callout-content\s*\{[\s\S]*?background: var\(--guide-callout-tip-bg\);/);
+  assert.match(cssSource, /\.article-callout\[data-kind="warning"\] \.article-callout-content\s*\{[\s\S]*?background: var\(--guide-callout-warning-bg\);/);
+  assert.match(checklistRule, /border: var\(--ds-border-width\) solid var\(--guide-card-border\);/);
+  assert.match(checklistRule, /background: var\(--guide-card-bg\);/);
+  assert.match(quoteRule, /border-left: 4px solid var\(--ds-border-strong\);/);
+  assert.match(tableRule, /border: var\(--ds-border-width\) solid var\(--guide-table-border\);/);
+  assert.match(cssSource, /\.article-table th\s*\{[\s\S]*?background: var\(--guide-table-header-bg\);/);
+});
+
+test("keeps article components off raw visual Tailwind and legacy token APIs", () => {
+  const rawTailwindColorPattern = /\b(?:bg|text|border)-(?:blue|slate|gray|zinc|neutral|red|yellow|green)-\d+\b/;
+  const legacyTokenPattern = /--ds-(surface|text|component|space|callout|control|stroke|radius-standard)/;
+
+  assert.doesNotMatch(articleComponentSource, rawTailwindColorPattern);
+  assert.doesNotMatch(articleComponentSource, legacyTokenPattern);
+  assert.doesNotMatch(articleBlocksSource, /\b(?:bg|text|border|rounded|p|px|py)-\[/);
+  assert.match(articleSource, /className="article-media-frame/);
+  assert.match(articleSource, /className="article-steps"/);
+  assert.match(articleSource, /className="article-pathway"/);
+  assert.match(articleSource, /className="article-related-nav"/);
 });
 
 test("renders Notion bullet groups as semantic unordered lists", () => {
@@ -88,14 +100,17 @@ test("renders Notion bullet groups as semantic unordered lists", () => {
   assert.match(listRule, /display: block;/);
   assert.match(listRule, /padding: 0;/);
   assert.doesNotMatch(listRule, /padding-left:/);
-  assert.match(listItemRule, /margin-inline-start: var\(--figma-indent-space-24\);/);
-  assert.match(listItemGapRule, /margin-top: var\(--figma-indent-space-12\);/);
+  assert.match(listItemRule, /margin-inline-start: var\(--guide-article-list-indent\);/);
+  assert.match(listItemGapRule, /margin-top: var\(--guide-article-list-gap\);/);
+  assert.match(cssSource, /\.article-paragraph\[data-terminal-colon="true"\] \+ \.article-list\s*\{[\s\S]*?var\(--guide-article-tight-gap\)/);
   assert.match(cssSource, /\.article-list-bulleted\s*\{[\s\S]*?list-style-type: disc;/);
-  assert.match(cssSource, /\.article-paragraph\[data-terminal-colon="true"\] \+ \.article-list/);
 });
 
 test("localizes callout badges and keeps Help Center as a real link", () => {
   assert.match(articleSource, /const calloutBadgeLabel = isEnglish \? "Tip" : "Совет";/);
+  assert.match(articleSource, /"Есть вопросы о платформе\?"/);
+  assert.match(articleSource, /"Перейти в Help Center\."/);
+  assert.doesNotMatch(articleSource, /Р/);
   assert.match(articleSource, /calloutBadgeLabel=\{calloutBadgeLabel\}/);
   assert.doesNotMatch(articleSource, /Pro-tip/);
   assert.match(articleSource, /<a\s+className="article-update-help-link"/);

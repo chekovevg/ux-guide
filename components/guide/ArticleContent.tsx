@@ -1,6 +1,13 @@
 import Image from "next/image";
 import type { MouseEvent } from "react";
-import { ArrowLeft, ArrowRight, Check, Link as LucideLink } from "lucide-react";
+import { ArrowLeft, ArrowRight, Link as LucideLink } from "lucide-react";
+import {
+  ArticleCallout,
+  ArticleChecklist,
+  ArticleExampleCard,
+  ArticleQuote,
+  ArticleTable,
+} from "./ArticleBlocks";
 import type { ContentBlock, GuideChapter, GuideSection } from "./types";
 
 export function ArticleContent({ chapter }: { chapter: GuideChapter }) {
@@ -43,10 +50,10 @@ function Hero({ chapter }: { chapter: GuideChapter }) {
     <header id="top" className="scroll-mt-28">
       <h1 className="type-h1">{chapter.title}</h1>
       {chapter.subtitle ? (
-        <p className="type-lead mt-[14px] text-[var(--muted)]">{chapter.subtitle}</p>
+        <p className="article-hero-subtitle type-lead">{chapter.subtitle}</p>
       ) : null}
       {chapter.coverImage ? (
-        <figure className="mt-[52px] overflow-hidden rounded-[var(--radius-standard)] bg-[var(--subtle)]">
+        <figure className="article-media-frame article-hero-media">
           <Image
             src={chapter.coverImage.src}
             alt={chapter.coverImage.alt}
@@ -77,7 +84,7 @@ function GuideSectionView({
   return (
     <section className={spacingClass}>
       {section.eyebrow ? (
-        <p className="text-[12px] leading-none text-[var(--muted)]">{section.eyebrow}</p>
+        <p className="article-section-eyebrow">{section.eyebrow}</p>
       ) : null}
       <Heading id={section.id} className={`article-heading scroll-mt-28 ${headingClass}`}>
         <a
@@ -90,7 +97,7 @@ function GuideSectionView({
         <HeadingLinkIcon />
       </Heading>
       {section.image ? (
-        <figure className="mt-8 overflow-hidden rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--subtle)]">
+        <figure className="article-media-frame mt-8">
           <Image
             src={section.image.src}
             alt={section.image.alt}
@@ -191,7 +198,7 @@ function ContentBlockView({
       );
     case "image":
       return (
-        <figure className="overflow-hidden rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--subtle)]">
+        <figure className="article-media-frame">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={block.src}
@@ -200,7 +207,7 @@ function ContentBlockView({
             loading="lazy"
           />
           {block.alt ? (
-            <figcaption className="type-caption px-4 py-3 text-[var(--muted)]">
+            <figcaption className="article-media-caption type-caption">
               {block.alt}
             </figcaption>
           ) : null}
@@ -208,8 +215,8 @@ function ContentBlockView({
       );
     case "toggle":
       return (
-        <details className="rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--surface-raised)] p-5">
-          <summary className="cursor-pointer text-[15px] font-semibold">
+        <details className="article-toggle">
+          <summary className="article-toggle-summary">
             {block.title}
           </summary>
           {block.text ? (
@@ -219,20 +226,20 @@ function ContentBlockView({
       );
     case "rawTable":
       return (
-        <div className="overflow-x-auto rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--surface-raised)] p-5">
-          <p className="type-table whitespace-pre-wrap break-words text-[var(--foreground)]">
+        <div className="article-raw-table">
+          <p className="article-raw-table-text type-table">
             {block.text}
           </p>
         </div>
       );
     case "steps":
       return (
-        <div className="rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--surface-raised)] p-5">
-          <h3 className="text-[17px] font-semibold">{block.title}</h3>
-          <ol className="mt-5 flex flex-col gap-4">
+        <div className="article-steps">
+          <h3 className="article-steps-title">{block.title}</h3>
+          <ol className="article-steps-list">
             {block.items.map((item, index) => (
-              <li key={item} className="type-body grid grid-cols-[28px_1fr] gap-3">
-                <span className="grid size-7 place-items-center rounded-full bg-[var(--foreground)] text-[12px] text-white">
+              <li key={item} className="article-step-item type-body">
+                <span className="article-step-index">
                   {index + 1}
                 </span>
                 <span>{item}</span>
@@ -251,136 +258,39 @@ function ContentBlockView({
       );
     case "table":
       return (
-        <div className="article-table">
-          <table>
-            <thead>
-              <tr>
-                {block.columns.map((column) => (
-                  <th key={column}>
-                    {column}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {block.rows.map((row) => (
-                <tr key={row.join("-")}>
-                  {row.map((cell) => (
-                    <td
-                      key={cell}
-                    >
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ArticleTable block={block} />
       );
     case "pathway":
       return (
-        <aside className="rounded-[var(--radius-standard)] border border-[var(--foreground)] bg-[var(--foreground)] p-5 text-white">
-          <h3 className="text-[19px] font-semibold">{block.title}</h3>
-          <ol className="type-body mt-5 flex flex-col gap-3 text-white/82">
+        <aside className="article-pathway">
+          <h3 className="article-pathway-title">{block.title}</h3>
+          <ol className="article-pathway-list type-body">
             {block.items.map((item, index) => (
-              <li key={item} className="grid grid-cols-[24px_1fr] gap-3">
-                <span className="text-white/55">{String(index + 1).padStart(2, "0")}</span>
+              <li key={item} className="article-pathway-item">
+                <span className="article-pathway-index">{String(index + 1).padStart(2, "0")}</span>
                 <span>{item}</span>
               </li>
             ))}
           </ol>
-          <button className="mt-6 inline-flex h-9 items-center rounded-[6px] bg-white px-3 text-[13px] font-medium text-[var(--foreground)]">
+          <button className="article-pathway-cta">
             {block.cta}
           </button>
         </aside>
       );
     case "related":
       return (
-        <nav aria-label="Related chapters" className="grid gap-3 sm:grid-cols-2">
+        <nav aria-label="Related chapters" className="article-related-nav">
           <a className="related-link" href="#">
             <ArrowLeft aria-hidden="true" className="size-4" />
             <span>{block.previous}</span>
           </a>
-          <a className="related-link justify-end text-right" href="#">
+          <a className="related-link related-link-next" href="#">
             <span>{block.next}</span>
             <ArrowRight aria-hidden="true" className="size-4" />
           </a>
         </nav>
       );
   }
-}
-
-function ArticleExampleCard({
-  block,
-  blockId,
-}: {
-  block: Extract<ContentBlock, { type: "callout" }>;
-  blockId: string;
-}) {
-  const textParagraphs = block.text
-    .split(/\n{2,}/)
-    .map((text) => text.trim())
-    .filter(Boolean);
-
-  return (
-    <aside id={blockId} className="article-example-card">
-      <div className="article-example-card-stack">
-        {block.title ? <p className="article-example-card-title">{block.title}</p> : null}
-        {textParagraphs.map((text, index) => (
-          <p key={`${blockId}-text-${index + 1}`} className="article-example-card-text">
-            {text}
-          </p>
-        ))}
-        {block.href && block.linkLabel ? (
-          <a className="article-link article-example-card-link" href={block.href}>
-            {block.linkLabel}
-          </a>
-        ) : null}
-      </div>
-    </aside>
-  );
-}
-
-function ArticleCallout({
-  block,
-  blockId,
-  calloutBadgeLabel,
-}: {
-  block: Extract<ContentBlock, { type: "callout" }>;
-  blockId: string;
-  calloutBadgeLabel: string;
-}) {
-  const isTip = block.variant === "tip";
-  const linkHref = block.href ?? `#${blockId}`;
-  const textParagraphs = block.text
-    .split(/\n{2,}/)
-    .map((text) => text.trim())
-    .filter(Boolean);
-
-  return (
-    <aside id={blockId} className={`article-callout article-callout-${block.variant}`}>
-      <div className="article-callout-content">
-        <div className={isTip ? "article-callout-stack article-callout-stack-tip" : "article-callout-stack"}>
-          {isTip ? <p className="article-callout-badge">{calloutBadgeLabel}</p> : null}
-          {block.title ? <p className="article-callout-title">{block.title}</p> : null}
-          {textParagraphs.map((text, index) => (
-            <p key={`${blockId}-text-${index + 1}`} className="article-callout-text">
-              {text}
-            </p>
-          ))}
-          {block.href && block.linkLabel ? (
-            <a className="article-link article-callout-link" href={block.href}>
-              {block.linkLabel}
-            </a>
-          ) : null}
-        </div>
-      </div>
-      <a className="article-callout-anchor" href={linkHref} aria-label="Link to callout">
-        <LucideLink aria-hidden="true" className="size-3.5" />
-      </a>
-    </aside>
-  );
 }
 
 function handleHeadingLinkClick(
@@ -401,98 +311,11 @@ function handleHeadingLinkClick(
 
 function HeadingLinkIcon() {
   return (
-    <svg
-      aria-label="Link to section"
+    <LucideLink
+      aria-hidden="true"
       className="article-heading-icon"
-      fill="none"
-      height="20"
-      viewBox="0 0 20 20"
-      width="20"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M13.1563 11.128L14.6776 9.60672C16.078 8.20639 16.078 5.93599 14.6776 4.53566C13.2773 3.13532 11.0069 3.13532 9.60656 4.53565L8.08524 6.05698M11.1279 13.1565L9.60656 14.6778C8.20622 16.0781 5.93582 16.0781 4.53549 14.6778C3.13515 13.2775 3.13515 11.0071 4.53549 9.60672L6.05681 8.0854"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.3"
-      />
-      <path
-        d="M11.1281 8.08541L8.08545 11.1281"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.3"
-      />
-    </svg>
-  );
-}
-
-function ArticleChecklist({
-  title,
-  items,
-  accentItemIndex,
-}: {
-  title?: string;
-  items: string[];
-  accentItemIndex?: number;
-}) {
-  return (
-    <div className="article-checklist">
-      {title ? <h3 className="article-checklist-title">{title}</h3> : null}
-      <ul className="article-checklist-list">
-        {items.map((item, index) => (
-          <li key={item} className="article-checklist-item">
-            <span className="article-checklist-icon" aria-hidden="true">
-              <Check className="size-3" strokeWidth={3} />
-            </span>
-            <span
-              className="article-checklist-text"
-              data-accent={index === accentItemIndex ? "true" : undefined}
-            >
-              {item}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function ArticleQuote({
-  block,
-}: {
-  block: Extract<ContentBlock, { type: "quote" }>;
-}) {
-  const authorName = block.authorName ?? block.byline;
-  const authorInitial = authorName?.trim().charAt(0).toUpperCase();
-
-  return (
-    <blockquote className="article-quote">
-      <p className="article-quote-text">{block.text}</p>
-      {authorName ? (
-        <footer className="article-quote-author">
-          {block.authorImage ? (
-            <Image
-              alt={block.authorImage.alt}
-              src={block.authorImage.src}
-              width={46}
-              height={46}
-              className="article-quote-avatar"
-            />
-          ) : authorInitial ? (
-            <span className="article-quote-avatar article-quote-avatar-placeholder" aria-hidden="true">
-              {authorInitial}
-            </span>
-          ) : null}
-          <div className="article-quote-author-text">
-            <p className="article-quote-author-name">{authorName}</p>
-            {block.authorTitle ? (
-              <p className="article-quote-author-title">{block.authorTitle}</p>
-            ) : null}
-          </div>
-        </footer>
-      ) : null}
-    </blockquote>
+      strokeWidth={1.5}
+    />
   );
 }
 

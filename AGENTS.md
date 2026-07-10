@@ -79,6 +79,21 @@ Use these known frames for the current Wynde guide work when Figma context is ne
 - Preserve the current static guide architecture unless the user explicitly requests a larger migration.
 - If Figma is connected or selected, treat it as the visual source of truth; treat the repo as the source of truth for routing, data, code style, and reusable components.
 
+## Codex Execution Rules
+
+Adapted for Codex from `https://github.com/multica-ai/andrej-karpathy-skills/blob/main/CLAUDE.md`.
+
+- Prefer caution over speed when the task has ambiguity, risk, or multiple reasonable interpretations; use judgment for trivial requests.
+- State important assumptions before implementing. If the request is unclear and guessing would be risky, ask a concise clarifying question.
+- Surface meaningful tradeoffs and simpler paths. Push back when a requested direction would add needless complexity or conflict with project rules.
+- Implement the minimum code that satisfies the request. Do not add speculative features, single-use abstractions, unused configurability, or defensive handling for scenarios the project cannot reach.
+- Keep every changed line traceable to the user's request. Do not clean up neighboring code, reformat unrelated files, or refactor working code just because it is nearby.
+- Match the existing project style even when another style seems preferable.
+- Remove imports, variables, functions, files, or tests made obsolete by your own changes. Do not delete pre-existing dead code unless explicitly asked; mention it instead.
+- For non-trivial work, define success in verifiable terms before or while implementing, then loop until the relevant checks pass or the remaining risk is documented.
+- For bug fixes, prefer a focused reproduction or test when practical before changing behavior. For refactors, verify behavior before and after when feasible.
+- For multi-step tasks, keep a short plan that pairs each step with its intended verification.
+
 ## Design Rules
 
 - Maintain a docs-like reading experience: desktop sidebar, in-page ToC, mobile navigation, clear active states, and readable article layout.

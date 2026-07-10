@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Стратегия UI и docs-инфраструктуры для Wynde Guide</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2328;
+      --muted: #667085;
+      --line: #e2e6ea;
+      --soft: #f7f8fa;
+      --accent: #3157d5;
+      --accent-soft: #eef2ff;
+      --good: #117a55;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f2f4f7;
+      color: var(--ink);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; line-height: 1.62; }
+    main { max-width: 1040px; margin: 0 auto; padding: 64px 32px 112px; background: #fff; min-height: 100vh; }
+    h1 { max-width: 820px; margin: 0 0 12px; font-size: clamp(36px, 5vw, 56px); line-height: 1.03; letter-spacing: -.045em; }
+    h2 { margin: 58px 0 18px; font-size: 28px; line-height: 1.2; letter-spacing: -.025em; }
+    h3 { margin: 34px 0 12px; font-size: 20px; line-height: 1.3; }
+    p, li, td, th { font-size: 16px; }
+    a { color: var(--accent); text-underline-offset: 3px; }
+    code { padding: 2px 5px; border-radius: 5px; background: #eef0f3; font: .92em ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .date { color: var(--muted); }
+    .lede { max-width: 800px; color: #48515d; font-size: 20px; }
+    .decision { margin: 34px 0; padding: 24px 26px; border: 1px solid #cbd5ff; border-radius: 16px; background: var(--accent-soft); }
+    .decision strong { color: #243fa4; }
+    .gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 24px 0; }
+    figure { margin: 26px 0; }
+    .gallery figure { margin: 0; }
+    img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 34px rgba(16, 24, 40, .10); }
+    figcaption { margin-top: 9px; color: var(--muted); font-size: 13px; }
+    table { width: 100%; margin: 24px 0; border-collapse: collapse; }
+    th, td { padding: 13px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: var(--soft); }
+    .recommended td { background: #f2fbf7; }
+    .recommended td:first-child { color: var(--good); font-weight: 700; }
+    pre { overflow: auto; padding: 22px; border-radius: 14px; background: #151a23; color: #e7edf5; font-size: 13px; line-height: 1.55; }
+    .columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+    .card { padding: 20px 22px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    .card h3 { margin-top: 0; }
+    .sources { padding: 20px 24px; border-radius: 14px; background: var(--soft); }
+    @media (max-width: 760px) {
+      main { padding: 38px 18px 72px; }
+      .gallery, .columns { grid-template-columns: 1fr; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Стратегия UI и docs-инфраструктуры для Wynde Guide</h1>
+  <p class="date">10 июля 2026</p>
+  <p class="lede">Как сохранить точность Figma, но перестать вручную поддерживать всю инфраструктуру documentation site.</p>
+
+  <section class="decision">
+    <strong>Решение:</strong> оставить Wynde/Figma владельцем визуального слоя. Fumadocs Core проверять только как узкий server-side source/page-tree/search layer и принимать лишь при отрицательном net custom-code diff. Glide/Fern использовать как UX-эталон, а не как тему, которую можно положить поверх текущего Next.js shell.
+  </section>
+
+  <h2>Почему текущий эксперимент выглядит странно</h2>
+  <p>Docs builders, визуальный дизайн и headless infrastructure — разные слои. Текущий patch не мигрирует приложение на Fern, Mintlify или Fumadocs. Он сохраняет самописный <code>GuideShell</code> и добавляет поверх Figma-токенов второй, Primer-подобный visual layer. Поэтому точность снизилась, а поиск, навигация, ToC и client state всё равно остались собственными.</p>
+
+  <h2>Что на самом деле делает Glide Docs</h2>
+  <p>Production HTML <a href="https://www.glideapps.com/docs">Glide Docs</a> показывает Fern generator metadata, Fern assets и Fern-specific selectors. При этом Glide добавляет собственный font, CSS, JavaScript, product theme, navbar и navigation behavior. Это Fern как инфраструктурный каркас плюс отдельная дизайн-реализация — не красивый default theme одним кликом.</p>
+
+  <div class="gallery">
+    <figure><img src="references/glide-docs-home-live.png" alt="Главная Glide Docs" /><figcaption>Glide Docs: branded entry page поверх Fern.</figcaption></figure>
+    <figure><img src="references/glide-docs-quick-start-top-live.png" alt="Статья Glide Docs" /><figcaption>Glide Docs: product switcher, grouped sidebar, article and local ToC.</figcaption></figure>
+  </div>
+
+  <h2>Текущая база и зрелые docs-паттерны</h2>
+  <p>У Wynde уже есть подходящий трёхколоночный shell и собственный визуальный язык. Зрелые docs-продукты подтверждают устойчивую структуру: сгруппированное дерево слева, читаемая статья, локальный ToC справа и поиск как отдельная interaction surface.</p>
+  <figure><img src="references/current-state.png" alt="Текущий Wynde Guide" /><figcaption>Текущий Wynde: основа уже ближе к целевому branded guide, чем generic framework theme.</figcaption></figure>
+  <div class="gallery">
+    <figure><img src="references/mintlify-navigation-live.png" alt="Mintlify navigation" /><figcaption>Mintlify: явные группы, active state и right-side ToC.</figcaption></figure>
+    <figure><img src="references/docusaurus-sidebar-live.png" alt="Docusaurus sidebar" /><figcaption>Docusaurus: вложенное дерево и стабильная page hierarchy.</figcaption></figure>
+  </div>
+  <figure><img src="references/lazyweb-noya-docs.png" alt="Noya docs reference" /><figcaption>Lazyweb reference: branded docs shell с поиском и понятной структурой разделов.</figcaption></figure>
+
+  <h2>Сравнение архитектур</h2>
+  <table>
+    <thead><tr><th>Вариант</th><th>Figma fidelity</th><th>Экономия infra</th><th>Миграция</th><th>Вердикт</th></tr></thead>
+    <tbody>
+      <tr><td>Fern целиком</td><td>Средняя без глубокой темы</td><td>Высокая</td><td>Высокая: MDX/docs.yml, hosting, i18n</td><td>Только при сознательной смене платформы</td></tr>
+      <tr><td>Полный fumadocs-ui</td><td>Средняя</td><td>Высокая</td><td>Средняя</td><td>Заменяет уже удачный visual layer</td></tr>
+      <tr class="recommended"><td>Fumadocs Core headless + Wynde UI</td><td>Высокая</td><td>Высокая в commodity-слое</td><td>Низкая/средняя, инкрементальная</td><td>Рекомендуется</td></tr>
+      <tr><td>Полностью custom</td><td>Максимальная</td><td>Низкая</td><td>Низкая сейчас, высокая со временем</td><td>Слишком много ручной docs-инфраструктуры</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Целевая архитектура</h2>
+  <pre>Localized Wynde content (RU / EN JSON)
+                    │
+                    ▼
+        WyndeSourceAdapter / StaticSource
+                    │
+                    ▼
+              Fumadocs Core
+       page tree · URLs · i18n · search
+       breadcrumbs · ToC data · metadata
+                    │
+                    ▼
+          Next.js App Router shell
+                    │
+                    ▼
+              Wynde UI layer
+  Figma tokens · sidebar · article blocks
+  mobile chrome · exact responsive states
+                    │
+                    ▼
+         Small client interaction islands</pre>
+
+  <div class="columns">
+    <section class="card">
+      <h3>Wynde/Figma владеют</h3>
+      <ul>
+        <li>типографикой, цветом и spacing;</li>
+        <li>desktop/mobile композицией;</li>
+        <li>sidebar/search presentation и состояниями;</li>
+        <li>callouts, tables, toggles, media и assets.</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h3>Docs core владеет</h3>
+      <ul>
+        <li>каноническим page tree и URLs;</li>
+        <li>locale-aware source;</li>
+        <li>search index и query primitives;</li>
+        <li>breadcrumbs, ToC data и route helpers.</li>
+      </ul>
+    </section>
+  </div>
+
+  <h2>Следующий шаг</h2>
+  <p>Сейчас не устанавливать новый docs framework и не делать массовую миграцию. Сначала собрать один вертикальный prototype chapter: RU/EN, grouped sidebar, search, ToC, deep links, несколько rich blocks, desktop/mobile states, keyboard/focus и production build. В Fumadocs v16 нет отдельного headless sidebar component: Wynde navigation остаётся собственной и получает единое дерево данных из Core. Критерий успеха — сохранение Wynde fidelity при реальном удалении самописной инфраструктуры, а не только сходство первого экрана с Glide.</p>
+
+  <h2>Источники</h2>
+  <div class="sources">
+    <ul>
+      <li><a href="https://buildwithfern.com/learn/docs/getting-started/how-it-works">Fern: how it works</a></li>
+      <li><a href="https://buildwithfern.com/learn/docs/customization/global-themes">Fern: global themes</a></li>
+      <li><a href="https://buildwithfern.com/learn/docs/customization/custom-css-js">Fern: custom CSS and JavaScript</a></li>
+      <li><a href="https://www.fumadocs.dev/docs/headless">Fumadocs Core: headless introduction</a></li>
+      <li><a href="https://www.fumadocs.dev/blog/v16">Fumadocs v16 changes</a></li>
+      <li><a href="https://www.fumadocs.dev/docs/headless/source-api/source">Fumadocs: static/custom Source</a></li>
+      <li><a href="https://www.fumadocs.dev/docs/headless/search/orama">Fumadocs: Orama search</a></li>
+    </ul>
+  </div>
+</main>
+</body>
+</html>

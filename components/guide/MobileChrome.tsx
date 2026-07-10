@@ -10,6 +10,7 @@ import {
   GuideLanguageMenu,
   GuideThemeToggle,
 } from "./GuideNavigation";
+import { GuideIconButton } from "./GuideUi";
 import type {
   GuideLanguageLink,
   GuideNavigationGroup,
@@ -102,14 +103,13 @@ export function MobileSearchPanel({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
-        <button
+        <GuideIconButton
           className="mobile-search-close"
           aria-label="Close search"
-          type="button"
           onClick={onClose}
         >
           <X aria-hidden="true" className="size-5" />
-        </button>
+        </GuideIconButton>
       </label>
       <div className="mobile-search-results">
         {results.length ? (
