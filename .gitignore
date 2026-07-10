@@ -21,6 +21,7 @@ Thumbs.db
 .qa-*.png
 .codex-screenshots/
 .review/
+.worktrees/
 pathway.zip
 content/wynde-guide-i18n-starter.zip
 
