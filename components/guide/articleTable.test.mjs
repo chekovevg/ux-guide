@@ -29,7 +29,7 @@ new Function("exports", "require", "module", compiledSource)(
 
 const { ArticleTable } = tableModule.exports;
 
-test("renders every table as a named keyboard-focusable region", () => {
+test("keeps narrow tables semantic without adding an unnecessary keyboard stop", () => {
   const markup = renderToStaticMarkup(
     React.createElement(ArticleTable, {
       blockId: "methods-table",
@@ -42,9 +42,9 @@ test("renders every table as a named keyboard-focusable region", () => {
   );
 
   assert.match(markup, /id="methods-table"/);
-  assert.match(markup, /role="region"/);
-  assert.match(markup, /aria-label="Method, How it works, Helps validate"/);
-  assert.match(markup, /tabindex="0"/);
+  assert.doesNotMatch(markup, /role="region"/);
+  assert.doesNotMatch(markup, /aria-label=/);
+  assert.doesNotMatch(markup, /tabindex="0"/);
   assert.doesNotMatch(markup, /data-wide=/);
   assert.equal((markup.match(/scope="col"/g) ?? []).length, 3);
 });
@@ -77,6 +77,9 @@ test("renders row headers and hidden column headers with table semantics", () =>
 
   assert.match(matrixMarkup, /data-wide="true"/);
   assert.match(matrixMarkup, /data-row-headers="true"/);
+  assert.match(matrixMarkup, /role="region"/);
+  assert.match(matrixMarkup, /aria-label="Stage one, Stage two, Stage three, Stage four"/);
+  assert.match(matrixMarkup, /tabindex="0"/);
   assert.match(matrixMarkup, /aria-hidden="true"/);
   assert.match(matrixMarkup, /scope="row"/);
   assert.match(matrixMarkup, /class="article-table-row-header"/);

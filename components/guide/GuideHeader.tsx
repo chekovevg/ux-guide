@@ -6,7 +6,6 @@ import {
   Search,
   X,
 } from "lucide-react";
-import { GuideButton, GuideIconButton } from "./GuideUi";
 
 type GuideHeaderProps = {
   contentsOpen: boolean;
@@ -46,10 +45,11 @@ export function GuideHeader({
         </a>
 
         <div className="guide-header-actions">
-          <GuideIconButton
+          <button
             className="icon-button"
             aria-label={searchOpen ? "Close search" : "Search"}
             aria-expanded={searchOpen}
+            type="button"
             onClick={onSearch}
           >
             {searchOpen ? (
@@ -57,11 +57,12 @@ export function GuideHeader({
             ) : (
               <Search aria-hidden="true" className="size-5" />
             )}
-          </GuideIconButton>
-          <GuideIconButton
+          </button>
+          <button
             className="icon-button"
             aria-label={menuOpen ? "Close guide navigation" : "Open guide navigation"}
             aria-expanded={menuOpen}
+            type="button"
             onClick={onMenu}
           >
             {menuOpen ? (
@@ -69,14 +70,15 @@ export function GuideHeader({
             ) : (
               <PanelLeft aria-hidden="true" className="size-5" />
             )}
-          </GuideIconButton>
+          </button>
         </div>
       </div>
       {!menuOpen && !searchOpen ? (
-        <GuideButton
+        <button
           className="guide-header-nav-panel"
           aria-label="Open page contents"
           aria-expanded={contentsOpen}
+          type="button"
           onClick={onContents}
         >
           <span className="guide-header-nav-dot" aria-hidden="true" />
@@ -86,7 +88,7 @@ export function GuideHeader({
           ) : (
             <ChevronDown aria-hidden="true" className="size-4" />
           )}
-        </GuideButton>
+        </button>
       ) : null}
     </header>
   );

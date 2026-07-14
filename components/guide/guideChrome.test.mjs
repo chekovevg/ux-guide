@@ -3,30 +3,10 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const headerSource = await readFile(new URL("./GuideHeader.tsx", import.meta.url), "utf8");
-const mobileSource = await readFile(new URL("./MobileChrome.tsx", import.meta.url), "utf8");
 const navigationSource = await readFile(new URL("./GuideNavigation.tsx", import.meta.url), "utf8");
-const pageTocSource = await readFile(new URL("./PageToc.tsx", import.meta.url), "utf8");
+const mobileSource = await readFile(new URL("./MobileChrome.tsx", import.meta.url), "utf8");
 const shellSource = await readFile(new URL("./GuideShell.tsx", import.meta.url), "utf8");
-const uiSource = await readFile(new URL("./GuideUi.tsx", import.meta.url), "utf8");
 const cssSource = await readFile(new URL("../../app/globals.css", import.meta.url), "utf8");
-const designSystemSource = await readFile(
-  new URL("../../app/design-system.css", import.meta.url),
-  "utf8",
-);
-
-test("centralizes guide UI primitives and variants", () => {
-  assert.match(uiSource, /export function GuideButton/);
-  assert.match(uiSource, /export function GuideIconButton/);
-  assert.match(uiSource, /export function GuideSearchTrigger/);
-  assert.match(uiSource, /export function GuideSurface/);
-  assert.match(uiSource, /export function GuideCard/);
-  assert.match(uiSource, /export function GuideKbd/);
-  assert.match(uiSource, /export function GuideBadge/);
-  assert.match(cssSource, /\.guide-button,\s*[\s\S]*?\.guide-icon-button,\s*[\s\S]*?\.guide-search-trigger/);
-  assert.match(cssSource, /\.guide-surface\s*\{[\s\S]*?background: var\(--guide-card-bg\);/);
-  assert.match(cssSource, /\.guide-card\s*\{[\s\S]*?border: var\(--ds-border-width\) solid var\(--guide-card-border\);/);
-  assert.match(cssSource, /\.guide-kbd\s*\{[\s\S]*?font-family: var\(--ds-font-mono\);/);
-});
 
 test("renders language and theme controls in the sidebar chrome", () => {
   assert.match(navigationSource, /languageLinks/);
@@ -38,58 +18,89 @@ test("renders language and theme controls in the sidebar chrome", () => {
   assert.match(cssSource, /\.theme-toggle/);
 });
 
-test("uses Primer-like ActionList density and structural selected state in sidebar", () => {
+test("keeps sidebar links compact and chapter cards in docs reference structure", () => {
   assert.doesNotMatch(navigationSource, /guide-nav-group-title/);
+  assert.doesNotMatch(navigationSource, /<h2 className="guide-nav-group-title"/);
   assert.match(navigationSource, /navigationGroups\.flatMap/);
-  assert.match(navigationSource, /aria-current=\{item\.active \? "page" : undefined\}/);
-  assert.match(cssSource, /\.guide-nav-list\s*\{[\s\S]*?gap: 2px;/);
-  assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?min-height: 34px;/);
-  assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?border-left: 2px solid transparent;/);
-  assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?padding: 6px 10px 6px 8px;/);
-  assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?font-size: 13px;/);
-  assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?font-weight: 500;/);
-  assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?letter-spacing: 0;/);
-  assert.match(cssSource, /\.guide-nav-link\[data-active="true"\]\s*\{[\s\S]*?background: var\(--guide-nav-item-selected-bg\);/);
-  assert.match(cssSource, /\.guide-nav-link\[data-active="true"\]\s*\{[\s\S]*?border-left-color: var\(--guide-nav-item-selected-border\);/);
+  assert.doesNotMatch(cssSource, /\.guide-nav-group-title/);
+  assert.match(cssSource, /\.guide-nav-list\s*\{[\s\S]*?gap: 0;/);
+  assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?min-height: 40px;/);
+  assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?padding: 10px 12px;/);
+  assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?font-size: 14px;/);
+  assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?font-weight: 400;/);
+  assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?line-height: 20px;/);
+  assert.match(cssSource, /\.guide-nav-link\s*\{[\s\S]*?letter-spacing: -0\.1px;/);
+  assert.match(cssSource, /\.guide-nav-link-label\s*\{[\s\S]*?-webkit-line-clamp: 2;/);
+  assert.match(cssSource, /\.guide-nav-link\[data-active="true"\]\s*\{[\s\S]*?border-radius: var\(--figma-indent-space-8\);/);
+  assert.match(shellSource, /className="article-chapter-title-row"/);
+  assert.match(shellSource, /className="article-chapter-description"/);
+  assert.match(cssSource, /\.article-chapter-description\s*\{[\s\S]*?text-overflow: ellipsis;/);
+  assert.match(cssSource, /\.article-chapter-icon\s*\{[\s\S]*?width: 16px;/);
+  assert.doesNotMatch(shellSource, /article-chapter-kicker/);
 });
 
-test("renders page toc active state with a structural rule", () => {
-  assert.match(shellSource, /"На этой странице"/);
-  assert.match(shellSource, /"Глава"/);
-  assert.doesNotMatch(shellSource, /Р/);
-  assert.match(pageTocSource, /aria-current=\{active \? "location" : undefined\}/);
-  assert.match(pageTocSource, /data-active=\{active \? "true" : undefined\}/);
-  assert.match(cssSource, /\.page-toc-link\s*\{[\s\S]*?border-left: var\(--ds-border-width\) solid var\(--guide-toc-rule\);/);
-  assert.match(cssSource, /\.page-toc-link\s*\{[\s\S]*?letter-spacing: 0;/);
-  assert.match(cssSource, /\.page-toc-link\[data-active="true"\]\s*\{[\s\S]*?border-left-width: var\(--guide-toc-active-stroke\);/);
-  assert.match(cssSource, /\.page-toc-link\[data-active="true"\]\s*\{[\s\S]*?color: var\(--guide-toc-active-fg\);/);
-  assert.match(designSystemSource, /--guide-toc-active-rule: var\(--ds-accent-emphasis\);/);
-  assert.match(designSystemSource, /--guide-toc-active-stroke: var\(--ds-primitive-stroke-active\);/);
+test("matches the flat Figma mobile guide navigation without desktop-only group labels", () => {
+  const mobileContentsSource = mobileSource.match(
+    /export function MobileContentsSection[\s\S]*?export function MobileSearchPanel/,
+  )?.[0] ?? "";
+  const mobileSiteMenuSource = mobileSource.match(
+    /export function MobileSiteMenu[\s\S]*?function getSearchResults/,
+  )?.[0] ?? "";
+
+  assert.doesNotMatch(mobileContentsSource, /getMobileContentsItems/);
+  assert.match(
+    mobileSiteMenuSource,
+    /getMobileContentsItems\(\s*navigationGroups\.flatMap\(\(group\) => group\.items\),\s*basePath,?\s*\)/s,
+  );
+  assert.match(mobileSiteMenuSource, /\{navigationItems\.map\(\(item\) => \(/);
+  assert.doesNotMatch(mobileSiteMenuSource, /mobile-guide-group-title/);
+  assert.doesNotMatch(mobileSiteMenuSource, /navigationGroups\.map\(\(group\) =>/);
+  assert.match(cssSource, /\.mobile-site-menu-content\s*\{[\s\S]*?padding: 16px 18px;/);
+  assert.match(cssSource, /\.mobile-guide-list\s*\{[\s\S]*?gap: 4px;/);
+  assert.match(cssSource, /\.mobile-guide-link\s*\{[\s\S]*?border-radius: 10px;/);
+  assert.match(cssSource, /\.mobile-guide-link\s*\{[\s\S]*?padding: 10px 12px;/);
+  assert.match(cssSource, /\.mobile-guide-link\s*\{[\s\S]*?font-weight: 400;/);
+  assert.match(cssSource, /\.mobile-guide-link\s*\{[\s\S]*?letter-spacing: -0\.1px;/);
+  assert.match(cssSource, /\.mobile-guide-link\[data-active="true"\]\s*\{[\s\S]*?border-radius: 8px;/);
 });
 
-test("opens desktop search as a command-palette pattern", () => {
-  assert.match(navigationSource, /<GuideKbd className="sidebar-search-kbd">Ctrl K<\/GuideKbd>/);
+test("renders page toc links with Figma page nav button states", () => {
+  assert.match(cssSource, /\.page-toc\s*\{[\s\S]*?width: min\(226px, 100%\);/);
+  assert.match(cssSource, /\.page-toc-title\s*\{[\s\S]*?font-weight: 400;/);
+  assert.match(cssSource, /\.page-toc-link\s*\{[\s\S]*?width: min\(226px, 100%\);/);
+  assert.match(cssSource, /\.page-toc-link\s*\{[\s\S]*?padding: 12px 0 12px 16px;/);
+  assert.match(cssSource, /\.page-toc-link\s*\{[\s\S]*?font-size: 14px;/);
+  assert.match(cssSource, /\.page-toc-link\s*\{[\s\S]*?font-weight: 400;/);
+  assert.match(cssSource, /\.page-toc-link\s*\{[\s\S]*?line-height: 20px;/);
+  assert.match(cssSource, /\.page-toc-link\s*\{[\s\S]*?letter-spacing: -0\.1px;/);
+  assert.match(cssSource, /\.page-toc-link\[data-nested="true"\]\s*\{[\s\S]*?padding-left: 28px;/);
+  assert.match(cssSource, /\.page-toc-link\[data-active="true"\]\s*\{[\s\S]*?border-left-width: var\(--toc-active-stroke\);/);
+  assert.match(cssSource, /\.page-toc-link\[data-active="true"\]\s*\{[\s\S]*?font-weight: 400;/);
+  assert.match(cssSource, /\.page-toc-compact\s*\{[\s\S]*?width: 100%;/);
+  assert.match(cssSource, /--toc-active-stroke: 1\.5px;/);
+});
+
+test("renders collapsed sidebar as a floating docs-style control pill", () => {
+  assert.match(navigationSource, /className="guide-sidebar-collapsed-rail"/);
+  assert.match(navigationSource, /<PanelLeft aria-hidden="true" className="size-\[18px\]" \/>/);
+  assert.match(navigationSource, /<Search aria-hidden="true" className="size-\[18px\]" \/>/);
+  assert.match(cssSource, /\.guide-sidebar-collapsed-rail\s*\{[\s\S]*?position: fixed;/);
+  assert.match(cssSource, /\.guide-sidebar-collapsed-rail\s*\{[\s\S]*?width: 66px;/);
+  assert.match(cssSource, /\.guide-sidebar-collapsed-rail\s*\{[\s\S]*?height: 36px;/);
+  assert.match(cssSource, /\.guide-sidebar-shell\[data-collapsed="true"\]\s*\{[\s\S]*?width: 0;/);
+  assert.match(cssSource, /\.guide-grid\[data-sidebar-collapsed="true"\] \.guide-article-area\s*\{[\s\S]*?margin-left: 0;/);
+});
+
+test("opens desktop search as a compact reference-style command input", () => {
   assert.match(shellSource, /placeholder="Search"/);
   assert.match(shellSource, /className="search-dialog-escape"/);
-  assert.match(shellSource, /event\.key === "Escape"/);
-  assert.match(shellSource, /aria-modal="true"/);
-  assert.match(shellSource, /role="dialog"/);
-  assert.match(cssSource, /\.search-dialog\s*\{[\s\S]*?width: min\(680px, calc\(100vw - 16px\)\);/);
-  assert.match(cssSource, /\.search-dialog\s*\{[\s\S]*?background: var\(--ds-bg-overlay\);/);
-  assert.match(cssSource, /\.search-dialog-result:hover\s*\{[\s\S]*?background: var\(--guide-search-result-hover-bg\);/);
+  assert.match(shellSource, /\{normalizedQuery \? \(/);
+  assert.doesNotMatch(shellSource, /placeholder="Search guide"/);
   assert.doesNotMatch(shellSource, /search-dialog-close/);
-});
-
-test("keeps mobile controls accessible and structurally stateful", () => {
-  assert.match(headerSource, /aria-expanded=\{searchOpen\}/);
-  assert.match(headerSource, /aria-expanded=\{menuOpen\}/);
-  assert.match(headerSource, /aria-expanded=\{contentsOpen\}/);
-  assert.match(mobileSource, /aria-modal="true"/);
-  assert.match(mobileSource, /role="dialog"/);
-  assert.match(mobileSource, /aria-current=\{item\.active \? "page" : undefined\}/);
-  assert.match(cssSource, /\.mobile-guide-link\s*\{[\s\S]*?border-left: 2px solid transparent;/);
-  assert.match(cssSource, /\.mobile-guide-link\[data-active="true"\]\s*\{[\s\S]*?border-left-color: var\(--guide-nav-item-selected-border\);/);
-  assert.match(cssSource, /\.mobile-contents-link:hover,\s*[\s\S]*?\.mobile-contents-link\[data-active="true"\]\s*\{[\s\S]*?border-left-color: var\(--ds-accent-emphasis\);/);
+  assert.match(cssSource, /\.search-dialog-backdrop\s*\{[\s\S]*?backdrop-filter: blur\(4px\);/);
+  assert.match(cssSource, /\.search-dialog-backdrop\s*\{[\s\S]*?padding-top: max\(16px, calc\(50vh - 250px\)\);/);
+  assert.match(cssSource, /\.search-dialog-control\s*\{[\s\S]*?height: 54px;/);
+  assert.match(cssSource, /\.search-dialog-input\s*\{[\s\S]*?font-size: 18px;/);
 });
 
 test("keeps desktop header free of the removed global search control", () => {

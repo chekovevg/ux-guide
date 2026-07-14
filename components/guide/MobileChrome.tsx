@@ -2,15 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
-import {
-  getGuideChapterHref,
-  getNavigationLabel,
-} from "./mobileContents.mjs";
+import { getMobileContentsItems } from "./mobileContents.mjs";
 import {
   GuideLanguageMenu,
   GuideThemeToggle,
 } from "./GuideNavigation";
-import { GuideIconButton } from "./GuideUi";
 import type {
   GuideLanguageLink,
   GuideNavigationGroup,
@@ -103,13 +99,14 @@ export function MobileSearchPanel({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
-        <GuideIconButton
+        <button
           className="mobile-search-close"
           aria-label="Close search"
+          type="button"
           onClick={onClose}
         >
           <X aria-hidden="true" className="size-5" />
-        </GuideIconButton>
+        </button>
       </label>
       <div className="mobile-search-results">
         {results.length ? (
@@ -152,6 +149,11 @@ export function MobileSiteMenu({
   onClose: () => void;
   onThemeChange: (themeMode: GuideThemeMode) => void;
 }) {
+  const navigationItems = getMobileContentsItems(
+    navigationGroups.flatMap((group) => group.items),
+    basePath,
+  );
+
   if (!open) {
     return null;
   }
@@ -165,35 +167,30 @@ export function MobileSiteMenu({
     >
       <div className="mobile-site-menu-content">
         <nav aria-label="Guide chapters" className="mobile-guide-nav">
-          {navigationGroups.map((group) => (
-            <section className="mobile-guide-group" key={group.title}>
-              <h2 className="mobile-guide-group-title">{group.title}</h2>
-              <ol className="mobile-guide-list">
-                {group.items.map((item) => (
-                  <li key={item.slug}>
-                    <a
-                      aria-current={item.active ? "page" : undefined}
-                      aria-disabled={!item.available ? true : undefined}
-                      className="mobile-guide-link"
-                      data-active={item.active ? "true" : undefined}
-                      data-disabled={!item.available ? "true" : undefined}
-                      href={item.available ? getGuideChapterHref(item.slug, basePath) : "#"}
-                      onClick={(event) => {
-                        if (!item.available) {
-                          event.preventDefault();
-                          return;
-                        }
+          <ol className="mobile-guide-list">
+            {navigationItems.map((item) => (
+              <li key={item.slug}>
+                <a
+                  aria-current={item.active ? "page" : undefined}
+                  aria-disabled={!item.available ? true : undefined}
+                  className="mobile-guide-link"
+                  data-active={item.active ? "true" : undefined}
+                  data-disabled={!item.available ? "true" : undefined}
+                  href={item.href}
+                  onClick={(event) => {
+                    if (!item.available) {
+                      event.preventDefault();
+                      return;
+                    }
 
-                        onClose();
-                      }}
-                    >
-                      {getNavigationLabel(item.slug, item.title, item.navTitle)}
-                    </a>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          ))}
+                    onClose();
+                  }}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ol>
         </nav>
 
         <footer className="mobile-site-footer">

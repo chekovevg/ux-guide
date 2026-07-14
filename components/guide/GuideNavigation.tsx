@@ -14,7 +14,6 @@ import {
   getGuideChapterHref,
   getNavigationLabel,
 } from "./mobileContents.mjs";
-import { GuideButton, GuideIconButton, GuideKbd, GuideSearchTrigger } from "./GuideUi";
 
 export { getNavigationLabel };
 
@@ -42,20 +41,22 @@ export function GuideNavigation({
   if (sidebarCollapsed) {
     return (
       <div className="guide-sidebar-collapsed-rail">
-        <GuideIconButton
+        <button
           className="guide-sidebar-icon-button"
           aria-label="Expand sidebar"
+          type="button"
           onClick={onToggleSidebar}
         >
           <PanelLeft aria-hidden="true" className="size-[18px]" />
-        </GuideIconButton>
-        <GuideIconButton
+        </button>
+        <button
           className="guide-sidebar-icon-button"
           aria-label="Search guide"
+          type="button"
           onClick={onSearch}
         >
           <Search aria-hidden="true" className="size-[18px]" />
-        </GuideIconButton>
+        </button>
       </div>
     );
   }
@@ -75,27 +76,29 @@ export function GuideNavigation({
             priority
           />
         </a>
-        <GuideIconButton
+        <button
           className="guide-sidebar-icon-button"
           aria-label="Collapse sidebar"
+          type="button"
           onClick={onToggleSidebar}
         >
           <PanelLeft aria-hidden="true" className="size-4" />
-        </GuideIconButton>
+        </button>
       </div>
 
       <div className="guide-sidebar-search-wrap">
-        <GuideSearchTrigger
+        <button
           className="search-control sidebar-search"
           aria-label="Search guide"
+          type="button"
           onClick={onSearch}
         >
           <span className="flex min-w-0 items-center gap-2 truncate">
             <Search aria-hidden="true" className="size-4 shrink-0" />
             <span className="truncate">Search</span>
           </span>
-          <GuideKbd className="sidebar-search-kbd">Ctrl K</GuideKbd>
-        </GuideSearchTrigger>
+          <kbd className="sidebar-search-kbd">Ctrl K</kbd>
+        </button>
       </div>
 
       <nav aria-label="Guide chapters" className="guide-sidebar-nav">
@@ -142,22 +145,24 @@ export function GuideThemeToggle({
 }) {
   return (
     <div className="theme-toggle" aria-label="Theme">
-      <GuideButton
+      <button
         aria-label="Use light theme"
         className="theme-toggle-button"
         data-active={themeMode === "light" ? "true" : undefined}
+        type="button"
         onClick={() => onThemeChange("light")}
       >
         <Sun aria-hidden="true" className="size-3.5" />
-      </GuideButton>
-      <GuideButton
+      </button>
+      <button
         aria-label="Use dark theme"
         className="theme-toggle-button"
         data-active={themeMode === "dark" ? "true" : undefined}
+        type="button"
         onClick={() => onThemeChange("dark")}
       >
         <Moon aria-hidden="true" className="size-3.5" />
-      </GuideButton>
+      </button>
     </div>
   );
 }

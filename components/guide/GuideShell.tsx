@@ -10,7 +10,6 @@ import {
   MobileSearchPanel,
   MobileSiteMenu,
 } from "./MobileChrome";
-import { GuideButton } from "./GuideUi";
 import { PageToc } from "./PageToc";
 import type {
   GuideChapter,
@@ -181,7 +180,7 @@ export function GuideShell({
   }, [themeMode]);
 
   return (
-    <div className="guide-root">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <GuideHeader
         contentsOpen={contentsOpen}
         currentTitle={activeSectionTitle}
@@ -318,10 +317,11 @@ function PageTocDropdown({
 
   return (
     <section className="guide-top-toc-shell" aria-label={title}>
-      <GuideButton
+      <button
         aria-controls="guide-top-toc-panel"
         aria-expanded={open}
         className="guide-top-toc-trigger"
+        type="button"
         onClick={onToggle}
       >
         <span
@@ -338,7 +338,7 @@ function PageTocDropdown({
         ) : (
           <ChevronDown aria-hidden="true" className="size-4" />
         )}
-      </GuideButton>
+      </button>
 
       {open ? (
         <div className="guide-top-toc-panel" id="guide-top-toc-panel">
@@ -409,13 +409,14 @@ function GuideSearchPanel({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
-          <GuideButton
+          <button
             className="search-dialog-escape"
             aria-label="Close search"
+            type="button"
             onClick={handleClose}
           >
             ESC
-          </GuideButton>
+          </button>
         </label>
 
         {normalizedQuery ? (

@@ -15,7 +15,7 @@ export function ArticleExampleCard({
     .filter(Boolean);
 
   return (
-    <aside id={blockId} className="article-example-card" data-kind="example">
+    <aside id={blockId} className="article-example-card">
       <div className="article-example-card-stack">
         {block.title ? <p className="article-example-card-title">{block.title}</p> : null}
         {textParagraphs.map((text, index) => (
@@ -43,7 +43,6 @@ export function ArticleCallout({
   calloutBadgeLabel: string;
 }) {
   const isTip = block.variant === "tip";
-  const calloutKind = block.variant === "warning" ? "warning" : isTip ? "tip" : "note";
   const linkHref = block.href ?? `#${blockId}`;
   const textParagraphs = block.text
     .split(/\n{2,}/)
@@ -51,11 +50,7 @@ export function ArticleCallout({
     .filter(Boolean);
 
   return (
-    <aside
-      id={blockId}
-      className={`article-callout article-callout-${block.variant}`}
-      data-kind={calloutKind}
-    >
+    <aside id={blockId} className={`article-callout article-callout-${block.variant}`}>
       <div className="article-callout-content">
         <div className={isTip ? "article-callout-stack article-callout-stack-tip" : "article-callout-stack"}>
           {isTip ? <p className="article-callout-badge">{calloutBadgeLabel}</p> : null}
@@ -167,9 +162,9 @@ export function ArticleTable({
       data-column-headers={showColumnHeaders ? "visible" : "hidden"}
       data-row-headers={rowHeaders ? "true" : undefined}
       data-wide={isWide ? "true" : undefined}
-      role="region"
-      aria-label={regionLabel}
-      tabIndex={0}
+      role={isWide ? "region" : undefined}
+      aria-label={isWide ? regionLabel : undefined}
+      tabIndex={isWide ? 0 : undefined}
     >
       <table>
         <thead className={showColumnHeaders ? undefined : "sr-only"}>

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { MouseEvent } from "react";
-import { ArrowLeft, ArrowRight, Link as LucideLink } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import {
   ArticleCallout,
   ArticleChecklist,
@@ -10,6 +10,10 @@ import {
 } from "./ArticleBlocks";
 import type { ContentBlock, GuideChapter, GuideSection } from "./types";
 
+const mobileCoverSources: Record<string, string> = {
+  "/figma/cover-resistance.svg": "/figma/cover-resistance-mobile.png",
+};
+
 export function ArticleContent({ chapter }: { chapter: GuideChapter }) {
   const isEnglish = chapter.updatedAt?.startsWith("Updated") ?? false;
   const calloutBadgeLabel = isEnglish ? "Tip" : "Совет";
@@ -18,7 +22,7 @@ export function ArticleContent({ chapter }: { chapter: GuideChapter }) {
     <>
       <Hero chapter={chapter} />
       {chapter.blocks?.length ? (
-        <div className="article-block-stack mt-8">
+        <div className="article-block-stack article-chapter-block-stack">
           {chapter.blocks.map((block, index) => (
             <ContentBlockView
               key={`${chapter.slug}-${index}`}
@@ -46,22 +50,37 @@ export function ArticleContent({ chapter }: { chapter: GuideChapter }) {
 }
 
 function Hero({ chapter }: { chapter: GuideChapter }) {
+  const mobileCoverSrc = chapter.coverImage
+    ? mobileCoverSources[chapter.coverImage.src]
+    : undefined;
+
   return (
-    <header id="top" className="scroll-mt-28">
-      <h1 className="type-h1">{chapter.title}</h1>
-      {chapter.subtitle ? (
-        <p className="article-hero-subtitle type-lead">{chapter.subtitle}</p>
-      ) : null}
+    <header id="top" className="article-hero scroll-mt-28">
+      <div className="article-hero-text">
+        <h1 className="type-h1">{chapter.title}</h1>
+        {chapter.subtitle ? (
+          <p className="type-lead text-[var(--muted)]">{chapter.subtitle}</p>
+        ) : null}
+      </div>
       {chapter.coverImage ? (
-        <figure className="article-media-frame article-hero-media">
-          <Image
-            src={chapter.coverImage.src}
-            alt={chapter.coverImage.alt}
-            width={906}
-            height={464}
-            priority
-            className="h-auto w-full"
-          />
+        <figure className="article-hero-cover overflow-hidden rounded-[var(--radius-standard)] bg-[var(--subtle)]">
+          <picture className="article-hero-cover-media block">
+            {mobileCoverSrc ? (
+              <source
+                media="(max-width: 63.999rem)"
+                srcSet={mobileCoverSrc}
+                type="image/png"
+              />
+            ) : null}
+            <Image
+              src={chapter.coverImage.src}
+              alt={chapter.coverImage.alt}
+              width={906}
+              height={464}
+              priority
+              className="h-auto w-full"
+            />
+          </picture>
         </figure>
       ) : null}
     </header>
@@ -79,12 +98,13 @@ function GuideSectionView({
 }) {
   const Heading = section.headingLevel === 3 ? "h3" : "h2";
   const headingClass = section.headingLevel === 3 ? "type-h3" : "type-h2";
-  const spacingClass = depth === 0 ? "pt-[84px]" : "pt-10";
+  const sectionClass =
+    depth === 0 ? "article-section" : "article-section article-subsection";
 
   return (
-    <section className={spacingClass}>
+    <section className={sectionClass}>
       {section.eyebrow ? (
-        <p className="article-section-eyebrow">{section.eyebrow}</p>
+        <p className="text-[12px] leading-none text-[var(--muted)]">{section.eyebrow}</p>
       ) : null}
       <Heading id={section.id} className={`article-heading scroll-mt-28 ${headingClass}`}>
         <a
@@ -97,7 +117,7 @@ function GuideSectionView({
         <HeadingLinkIcon />
       </Heading>
       {section.image ? (
-        <figure className="article-media-frame mt-8">
+        <figure className="article-section-image overflow-hidden rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--subtle)]">
           <Image
             src={section.image.src}
             alt={section.image.alt}
@@ -108,7 +128,7 @@ function GuideSectionView({
         </figure>
       ) : null}
       {section.blocks.length ? (
-        <div className="article-block-stack mt-8">
+        <div className="article-block-stack article-section-block-stack">
           {section.blocks.map((block, index) => (
             <ContentBlockView
               key={`${section.id}-${index}`}
@@ -120,7 +140,7 @@ function GuideSectionView({
         </div>
       ) : null}
       {section.children?.length ? (
-        <div className={depth === 0 ? "mt-10 flex flex-col gap-8" : "mt-8 flex flex-col gap-6"}>
+        <div className="article-subsection-stack">
           {section.children.map((child) => (
             <GuideSectionView
               key={child.id}
@@ -198,7 +218,7 @@ function ContentBlockView({
       );
     case "image":
       return (
-        <figure className="article-media-frame">
+        <figure className="overflow-hidden rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--subtle)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={block.src}
@@ -207,7 +227,7 @@ function ContentBlockView({
             loading="lazy"
           />
           {block.alt ? (
-            <figcaption className="article-media-caption type-caption">
+            <figcaption className="type-caption px-4 py-3 text-[var(--muted)]">
               {block.alt}
             </figcaption>
           ) : null}
@@ -215,13 +235,11 @@ function ContentBlockView({
       );
     case "toggle":
       return (
-        <details className="article-toggle">
-          <summary className="article-toggle-summary">
+        <details className="article-toggle rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--surface-raised)] p-5">
+          <summary className="article-toggle-summary cursor-pointer text-[15px] font-semibold">
             {block.title}
           </summary>
-          {block.text ? (
-            <p className="type-body mt-4">{block.text}</p>
-          ) : null}
+          {block.text ? <p className="type-body mt-4">{block.text}</p> : null}
           {block.blocks.length ? (
             <div className="article-block-stack article-toggle-blocks">
               {block.blocks.map((childBlock, childIndex) => {
@@ -231,7 +249,7 @@ function ContentBlockView({
                   <ContentBlockView
                     key={childBlockId}
                     block={childBlock}
-                    blockId={`${blockId}-child-${childIndex + 1}`}
+                    blockId={childBlockId}
                     calloutBadgeLabel={calloutBadgeLabel}
                   />
                 );
@@ -242,20 +260,20 @@ function ContentBlockView({
       );
     case "rawTable":
       return (
-        <div className="article-raw-table">
-          <p className="article-raw-table-text type-table">
+        <div className="overflow-x-auto rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--surface-raised)] p-5">
+          <p className="type-table whitespace-pre-wrap break-words text-[var(--foreground)]">
             {block.text}
           </p>
         </div>
       );
     case "steps":
       return (
-        <div className="article-steps">
-          <h3 className="article-steps-title">{block.title}</h3>
-          <ol className="article-steps-list">
+        <div className="rounded-[var(--radius-standard)] border border-[var(--line)] bg-[var(--surface-raised)] p-5">
+          <h3 className="text-[17px] font-semibold">{block.title}</h3>
+          <ol className="mt-5 flex flex-col gap-4">
             {block.items.map((item, index) => (
-              <li key={item} className="article-step-item type-body">
-                <span className="article-step-index">
+              <li key={item} className="type-body grid grid-cols-[28px_1fr] gap-3">
+                <span className="grid size-7 place-items-center rounded-full bg-[var(--foreground)] text-[12px] text-white">
                   {index + 1}
                 </span>
                 <span>{item}</span>
@@ -273,34 +291,32 @@ function ContentBlockView({
         <ArticleQuote block={block} />
       );
     case "table":
-      return (
-        <ArticleTable block={block} blockId={blockId} />
-      );
+      return <ArticleTable block={block} blockId={blockId} />;
     case "pathway":
       return (
-        <aside className="article-pathway">
-          <h3 className="article-pathway-title">{block.title}</h3>
-          <ol className="article-pathway-list type-body">
+        <aside className="rounded-[var(--radius-standard)] border border-[var(--foreground)] bg-[var(--foreground)] p-5 text-white">
+          <h3 className="text-[19px] font-semibold">{block.title}</h3>
+          <ol className="type-body mt-5 flex flex-col gap-3 text-white/82">
             {block.items.map((item, index) => (
-              <li key={item} className="article-pathway-item">
-                <span className="article-pathway-index">{String(index + 1).padStart(2, "0")}</span>
+              <li key={item} className="grid grid-cols-[24px_1fr] gap-3">
+                <span className="text-white/55">{String(index + 1).padStart(2, "0")}</span>
                 <span>{item}</span>
               </li>
             ))}
           </ol>
-          <button className="article-pathway-cta">
+          <button className="mt-6 inline-flex h-9 items-center rounded-[6px] bg-white px-3 text-[13px] font-medium text-[var(--foreground)]">
             {block.cta}
           </button>
         </aside>
       );
     case "related":
       return (
-        <nav aria-label="Related chapters" className="article-related-nav">
+        <nav aria-label="Related chapters" className="grid gap-3 sm:grid-cols-2">
           <a className="related-link" href="#">
             <ArrowLeft aria-hidden="true" className="size-4" />
             <span>{block.previous}</span>
           </a>
-          <a className="related-link related-link-next" href="#">
+          <a className="related-link justify-end text-right" href="#">
             <span>{block.next}</span>
             <ArrowRight aria-hidden="true" className="size-4" />
           </a>
@@ -327,11 +343,29 @@ function handleHeadingLinkClick(
 
 function HeadingLinkIcon() {
   return (
-    <LucideLink
-      aria-hidden="true"
+    <svg
+      aria-label="Link to section"
       className="article-heading-icon"
-      strokeWidth={1.5}
-    />
+      fill="none"
+      height="20"
+      viewBox="0 0 20 20"
+      width="20"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M13.1563 11.128L14.6776 9.60672C16.078 8.20639 16.078 5.93599 14.6776 4.53566C13.2773 3.13532 11.0069 3.13532 9.60656 4.53565L8.08524 6.05698M11.1279 13.1565L9.60656 14.6778C8.20622 16.0781 5.93582 16.0781 4.53549 14.6778C3.13515 13.2775 3.13515 11.0071 4.53549 9.60672L6.05681 8.0854"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.3"
+      />
+      <path
+        d="M11.1281 8.08541L8.08545 11.1281"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.3"
+      />
+    </svg>
   );
 }
 
