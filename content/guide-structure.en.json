@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 4,
   "source": {
     "type": "notion",
     "notionPageId": "2c409e0a382f819ea254e2989aa871a9",
@@ -1100,6 +1100,45 @@
         {
           "type": "table",
           "sourceBlockIndex": 215,
+          "table": {
+            "columns": [
+              "Method",
+              "How it works",
+              "Helps validate"
+            ],
+            "rows": [
+              [
+                "Unmoderated Scenario-Based Test",
+                "the respondent completes a task in a prototype or on a website independently, without a moderator. For example: “Set up the order so it arrives by dinner.”",
+                "It shows whether users understand the interface, easily find the needed elements, complete the scenario without errors, and perceive the path as convenient."
+              ],
+              [
+                "Preference test",
+                "the respondent is shown several variants — screens, copy, or images — and asked to choose the one that seems better. For example: “Which option looks more beneficial?”",
+                "It helps understand the perception of different solutions, but not usability: which option inspires more trust and looks more attractive, which copy or banners attract more attention."
+              ],
+              [
+                "A/B usability test",
+                "respondents are shown different versions of the same screen or scenario — for example, variant A and variant B. Each group completes the same task, and you compare the results: who completed it faster, made fewer mistakes, and where users felt more confident.",
+                "The method helps determine which interface variant works better — not by taste, but by actual use."
+              ],
+              [
+                "Card sorting",
+                "the respondent is shown cards with product elements and asked to group them by meaning in the way they would expect to see them on a website or in an app.",
+                "It helps design navigation from scratch or check whether the current navigation matches users’ logic."
+              ],
+              [
+                "First Click",
+                "the respondent sees an interface screen and completes a task: find and click the element they would start with.",
+                "It helps understand whether the design is structured correctly and whether users understand where to click to solve the task."
+              ],
+              [
+                "Five-Second Test",
+                "the respondent is shown a screen or page for 5 seconds, sometimes longer if the content is complex, and then answers questions.",
+                "It helps evaluate the first impression of a page, screen, or product: what people notice immediately, whether they understand the meaning, and how clearly the brand or product message is communicated."
+              ]
+            ]
+          },
           "text": "Method. How it works. Helps validate. Unmoderated Scenario-Based Test: the respondent completes a task in a prototype or on a website independently, without a moderator. For example: “Set up the order so it arrives by dinner.” It shows whether users understand the interface, easily find the needed elements, complete the scenario without errors, and perceive the path as convenient. Preference test: the respondent is shown several variants — screens, copy, or images — and asked to choose the one that seems better. For example: “Which option looks more beneficial?” It helps understand the perception of different solutions, but not usability: which option inspires more trust and looks more attractive, which copy or banners attract more attention. A/B usability test: respondents are shown different versions of the same screen or scenario — for example, variant A and variant B. Each group completes the same task, and you compare the results: who completed it faster, made fewer mistakes, and where users felt more confident. The method helps determine which interface variant works better — not by taste, but by actual use. Card sorting: the respondent is shown cards with product elements and asked to group them by meaning in the way they would expect to see them on a website or in an app. It helps design navigation from scratch or check whether the current navigation matches users’ logic. First Click: the respondent sees an interface screen and completes a task: find and click the element they would start with. It helps understand whether the design is structured correctly and whether users understand where to click to solve the task. Five-Second Test: the respondent is shown a screen or page for 5 seconds, sometimes longer if the content is complex, and then answers questions. It helps evaluate the first impression of a page, screen, or product: what people notice immediately, whether they understand the meaning, and how clearly the brand or product message is communicated."
         }
       ],
@@ -2530,6 +2569,30 @@
             {
               "type": "table",
               "sourceBlockIndex": 484,
+              "table": {
+                "columns": [
+                  "Sample size",
+                  "Margin of error"
+                ],
+                "rows": [
+                  [
+                    "30",
+                    "18%"
+                  ],
+                  [
+                    "43",
+                    "15%"
+                  ],
+                  [
+                    "96",
+                    "10%"
+                  ],
+                  [
+                    "384",
+                    "5%"
+                  ]
+                ]
+              },
               "text": "Sample size. Margin of error. 30 — 18%. 43 — 15%. 96 — 10%. 384 — 5%."
             },
             {
@@ -3807,6 +3870,26 @@
                 {
                   "type": "table",
                   "sourceBlockIndex": 760,
+                  "table": {
+                    "columns": [
+                      "Problem",
+                      "Solution"
+                    ],
+                    "rows": [
+                      [
+                        "Hallucination Many AI tools can invent conclusions even if you feed them specific interview transcripts or open comments.",
+                        "— Use tools that provide links to specific quotes / numbers from your data so you can quickly check the basis for a conclusion, such as Notebook LM or Breyta — Require specific quotes from the transcript or links to data — Use prompts that define in advance the rules the neural network must follow, including direct instructions such as “do not invent anything”"
+                      ],
+                      [
+                        "Misinterpretation In a complex domain, a neural-network model may not understand field-specific nuances and may incorrectly interpret respondents’ words and comments",
+                        "— Share materials on the topic with the neural network and ask it to interpret answers with the “learned” context in mind — Provide detailed context in the prompt, for example: “Our product offers API integration for hotel inventory”…"
+                      ],
+                      [
+                        "Incorrect calculations A request to calculate data using a specific framework, for example Price Sensitivity Meter, may fail — the model may use an invented calculation formula and give false results.",
+                        "— Choose specialized tools for data analysis, such as specific GPT plugins — Provide the correct calculation formula and ask it to work strictly according to that formula"
+                      ]
+                    ]
+                  },
                   "text": "ProblemSolutionHallucination Many AI tools can invent conclusions even if you feed them specific interview transcripts or open comments. — Use tools that provide links to specific quotes / numbers from your data so you can quickly check the basis for a conclusion, such as Notebook LM or Breyta — Require specific quotes from the transcript or links to data — Use prompts that define in advance the rules the neural network must follow, including direct instructions such as “do not invent anything” Misinterpretation In a complex domain, a neural-network model may not understand field-specific nuances and may incorrectly interpret respondents’ words and comments — Share materials on the topic with the neural network and ask it to interpret answers with the “learned” context in mind — Provide detailed context in the prompt, for example: “Our product offers API integration for hotel inventory”… Incorrect calculations A request to calculate data using a specific framework, for example Price Sensitivity Meter, may fail — the model may use an invented calculation formula and give false results. — Choose specialized tools for data analysis, such as specific GPT plugins — Provide the correct calculation formula and ask it to work strictly according to that formula"
                 }
               ],
@@ -3876,12 +3959,44 @@
             {
               "type": "toggle",
               "sourceBlockIndex": 771,
-              "text": "[Russian text from the image]"
+              "text": "[Russian text from the image]",
+              "children": [
+                {
+                  "type": "table",
+                  "table": {
+                    "columns": ["", "Unintentional", "Self-Referential", "Expert", "Centralized", "Distributed"],
+                    "rows": [
+                      ["What it looks like", "UX", "UX + discourse", "UX + discourse + methods", "UX + discourse + methods + processes", "UX culture + discourse + methods + processes + business"],
+                      ["Key barriers", "Lack of awareness, rejection", "Time, budget, and resource constraints", "Formalization, deepening, expansion", "Scaling", ""],
+                      ["Tools for advancement", "Training", "Usability testing", "Quantitative methods", "Linking UX metrics to KPIs", ""]
+                    ],
+                    "showColumnHeaders": true,
+                    "rowHeaders": true
+                  }
+                }
+              ]
             },
             {
               "type": "toggle",
               "sourceBlockIndex": 772,
-              "text": "[details on how to read the image will go here]"
+              "text": "[details on how to read the image will go here]",
+              "children": [
+                {
+                  "type": "table",
+                  "table": {
+                    "columns": ["Unintentional", "Self-Referential", "Expert", "Centralized", "Distributed"],
+                    "rows": [[
+                      "UX is not considered a separate practice. It emerges incidentally \u2014 as a by-product of business or IT tasks.",
+                      "The product is designed \u201cfor ourselves\u201d: users are idealized, and real data is barely used. UX appears in external communications but remains a slogan.",
+                      "A dedicated UX specialist or small UX team emerges within the company. Tests are rare and not always methodologically rigorous.",
+                      "There is a full UX team (information architecture, interaction design, usability). UX techniques are systematic and embedded in the process.",
+                      "UX has the same organizational standing as marketing and finance. It is embedded in the culture and involved at every stage: discovery \u2192 design \u2192 development."
+                    ]],
+                    "showColumnHeaders": false,
+                    "rowHeaders": false
+                  }
+                }
+              ]
             },
             {
               "type": "text",

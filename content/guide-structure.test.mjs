@@ -25,11 +25,27 @@ function flattenHeadings(nodes) {
   return nodes.flatMap((node) => [node, ...flattenHeadings(node.children ?? [])]);
 }
 
+function flattenNestedBlocks(blocks) {
+  return blocks.flatMap((block) => [
+    block,
+    ...flattenNestedBlocks(block.children ?? []),
+  ]);
+}
+
 function flattenBlocks(nodes) {
   return nodes.flatMap((node) => [
-    ...(node.blocks ?? []),
+    ...flattenNestedBlocks(node.blocks ?? []),
     ...flattenBlocks(node.children ?? []),
   ]);
+}
+
+function blockStructuralSnapshot(block) {
+  return {
+    type: block.type,
+    sourceBlockIndex: block.sourceBlockIndex,
+    image: block.image,
+    children: (block.children ?? []).map(blockStructuralSnapshot),
+  };
 }
 
 function structuralSnapshot(nodes) {
@@ -38,11 +54,7 @@ function structuralSnapshot(nodes) {
     level: node.level,
     notionBlockType: node.notionBlockType,
     sourceBlockIndex: node.sourceBlockIndex,
-    blocks: (node.blocks ?? []).map((block) => ({
-      type: block.type,
-      sourceBlockIndex: block.sourceBlockIndex,
-      image: block.image,
-    })),
+    blocks: (node.blocks ?? []).map(blockStructuralSnapshot),
     children: structuralSnapshot(node.children ?? []),
   }));
 }
@@ -69,8 +81,125 @@ function collectLocalizableFields(value, path = []) {
   });
 }
 
+function getStructuredTables(guideStructure) {
+  return flattenBlocks(guideStructure.chapters).filter(
+    (block) => block.type === "table" && block.table,
+  );
+}
+
+function getBlockBySourceIndex(guideStructure, sourceBlockIndex) {
+  return flattenBlocks(guideStructure.chapters).find(
+    (block) => block.sourceBlockIndex === sourceBlockIndex,
+  );
+}
+
+function normalizeTableContent(value) {
+  return value
+    .normalize("NFKC")
+    .toLocaleLowerCase()
+    .replace(/[^\p{L}\p{N}%]+/gu, "");
+}
+
+test("stores every guide table as structured columns and rows", async () => {
+  const enStructure = await readJsonIfExists("./guide-structure.en.json");
+  const indexedShapes = new Map([
+    [215, { columns: 3, rows: 6 }],
+    [484, { columns: 2, rows: 4 }],
+    [760, { columns: 2, rows: 3 }],
+  ]);
+
+  assert.ok(enStructure);
+
+  for (const [locale, localizedStructure] of [
+    ["default", structure],
+    ["ru", ruStructure],
+    ["en", enStructure],
+  ]) {
+    assert.equal(localizedStructure.schemaVersion, 4, `${locale}:schema`);
+
+    const tables = getStructuredTables(localizedStructure);
+    assert.equal(tables.length, 5, `${locale}:table count`);
+
+    for (const [sourceBlockIndex, expected] of indexedShapes) {
+      const tableBlock = getBlockBySourceIndex(localizedStructure, sourceBlockIndex);
+
+      assert.ok(tableBlock?.table, `${locale}:${sourceBlockIndex}`);
+      assert.equal(tableBlock.table.columns.length, expected.columns);
+      assert.equal(tableBlock.table.rows.length, expected.rows);
+      assert.ok(
+        tableBlock.table.rows.every(
+          (row) => row.length === tableBlock.table.columns.length,
+        ),
+        `${locale}:${sourceBlockIndex}:row widths`,
+      );
+
+      const structuredText = [
+        ...tableBlock.table.columns,
+        ...tableBlock.table.rows.flat(),
+      ].join(" ");
+
+      assert.equal(
+        normalizeTableContent(structuredText),
+        normalizeTableContent(tableBlock.text),
+        `${locale}:${sourceBlockIndex}:source content`,
+      );
+    }
+
+    const matrixToggle = getBlockBySourceIndex(localizedStructure, 771);
+    const descriptionToggle = getBlockBySourceIndex(localizedStructure, 772);
+    const matrix = matrixToggle?.children?.[0]?.table;
+    const descriptions = descriptionToggle?.children?.[0]?.table;
+
+    assert.equal(matrixToggle?.type, "toggle", `${locale}:771 type`);
+    assert.equal(descriptionToggle?.type, "toggle", `${locale}:772 type`);
+    assert.equal(matrixToggle?.children?.length, 1, `${locale}:771 children`);
+    assert.equal(descriptionToggle?.children?.length, 1, `${locale}:772 children`);
+    assert.equal(matrix?.columns.length, 6, `${locale}:771 columns`);
+    assert.equal(matrix?.rows.length, 3, `${locale}:771 rows`);
+    assert.equal(matrix?.rowHeaders, true, `${locale}:771 row headers`);
+    assert.equal(
+      matrixToggle?.children?.[0]?.sourceBlockIndex,
+      undefined,
+      `${locale}:771 nested source index`,
+    );
+    assert.equal(descriptions?.columns.length, 5, `${locale}:772 columns`);
+    assert.equal(descriptions?.rows.length, 1, `${locale}:772 rows`);
+    assert.equal(
+      descriptions?.showColumnHeaders,
+      false,
+      `${locale}:772 hidden headers`,
+    );
+    assert.equal(
+      descriptionToggle?.children?.[0]?.sourceBlockIndex,
+      undefined,
+      `${locale}:772 nested source index`,
+    );
+
+    const localizedTableText = tables
+      .flatMap((tableBlock) => [
+        ...tableBlock.table.columns,
+        ...tableBlock.table.rows.flat(),
+      ])
+      .join(" ");
+
+    if (locale === "en") {
+      assert.doesNotMatch(localizedTableText, /[\u0400-\u04ff]/, "en:table text");
+    }
+  }
+
+  for (const sourceBlockIndex of [215, 484, 760, 771, 772]) {
+    assert.deepEqual(
+      getBlockBySourceIndex(structure, sourceBlockIndex)?.table ??
+        getBlockBySourceIndex(structure, sourceBlockIndex)?.children,
+      getBlockBySourceIndex(ruStructure, sourceBlockIndex)?.table ??
+        getBlockBySourceIndex(ruStructure, sourceBlockIndex)?.children,
+      `default/ru:${sourceBlockIndex}`,
+    );
+  }
+});
+
 test("stores the full Notion guide structure as backend-ready data", () => {
-  assert.equal(structure.schemaVersion, 2);
+  assert.equal(structure.schemaVersion, 4);
   assert.equal(
     structure.source.notionPageId,
     "2c409e0a382f819ea254e2989aa871a9",
@@ -281,4 +410,33 @@ test("keeps guide content out of the data adapter hardcode", async () => {
   assert.doesNotMatch(guideSource, /resistanceSections/);
   assert.doesNotMatch(guideSource, /Resistance to research/);
   assert.doesNotMatch(guideSource, /Handling objections/);
+});
+
+test("converts structured tables and recursive toggle children before legacy fallback", async () => {
+  const [guideSource, typesSource] = await Promise.all([
+    readFile(new URL("./guide.ts", import.meta.url), "utf8"),
+    readFile(
+      new URL("../components/guide/types.ts", import.meta.url),
+      "utf8",
+    ),
+  ]);
+
+  assert.match(guideSource, /function getStructuredTable/);
+  assert.match(guideSource, /const structuredTable = getStructuredTable\(block\);/);
+  assert.match(
+    guideSource,
+    /blocks: notionBlocksToContentBlocks\(block\.children \?\? \[\]\)/,
+  );
+  assert.match(
+    guideSource,
+    /if \(structuredTable\) \{[\s\S]*?result\.push\(structuredTable\);/,
+  );
+  assert.match(
+    typesSource,
+    /type: "toggle";[\s\S]*?blocks: ContentBlock\[\];/,
+  );
+  assert.match(
+    typesSource,
+    /type: "table";[\s\S]*?showColumnHeaders\?: boolean;[\s\S]*?rowHeaders\?: boolean;/,
+  );
 });

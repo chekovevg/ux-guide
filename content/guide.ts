@@ -32,6 +32,47 @@ function normalizeText(text?: string) {
   return text?.replace(/\s+/g, " ").trim() ?? "";
 }
 
+function getStructuredTable(
+  block: GuideStructureBlock,
+): Extract<ContentBlock, { type: "table" }> | null {
+  if (
+    block.type !== "table" ||
+    !block.table?.columns.length ||
+    !block.table.rows.length
+  ) {
+    return null;
+  }
+
+  const columns = block.table.columns.map((column) => normalizeText(column));
+  const rows = block.table.rows.map((row) =>
+    row.map((cell) => normalizeText(cell)),
+  );
+  const rowHeaders = block.table.rowHeaders === true;
+  const hasInvalidColumn = columns.some(
+    (column, columnIndex) =>
+      !column && !(rowHeaders && columnIndex === 0),
+  );
+
+  if (
+    hasInvalidColumn ||
+    rows.some((row) => row.length !== columns.length)
+  ) {
+    return null;
+  }
+
+  return {
+    type: "table",
+    columns,
+    rows,
+    ...(block.table.showColumnHeaders === undefined
+      ? {}
+      : { showColumnHeaders: block.table.showColumnHeaders }),
+    ...(block.table.rowHeaders === undefined
+      ? {}
+      : { rowHeaders: block.table.rowHeaders }),
+  };
+}
+
 function normalizeImageSrc(src: string) {
   if (src.startsWith("http://") || src.startsWith("https://")) {
     return src;
@@ -228,6 +269,7 @@ function notionBlocksToContentBlocks(blocks: GuideStructureBlock[]): ContentBloc
 
   for (const block of blocks) {
     const text = normalizeText(block.text);
+    const structuredTable = getStructuredTable(block);
 
     if (block.type === "bulleted_list") {
       numberedItems = [];
@@ -275,9 +317,17 @@ function notionBlocksToContentBlocks(blocks: GuideStructureBlock[]): ContentBloc
     } else if (block.type === "quote" && text) {
       result.push(parseStructuredQuote(text) ?? { type: "paragraph", text });
     } else if (block.type === "toggle" && text) {
-      result.push({ type: "toggle", title: text });
-    } else if (block.type === "table" && text) {
-      result.push({ type: "rawTable", text });
+      result.push({
+        type: "toggle",
+        title: text,
+        blocks: notionBlocksToContentBlocks(block.children ?? []),
+      });
+    } else if (block.type === "table") {
+      if (structuredTable) {
+        result.push(structuredTable);
+      } else if (text) {
+        result.push({ type: "rawTable", text });
+      }
     } else if (
       block.type === "image" &&
       block.image &&

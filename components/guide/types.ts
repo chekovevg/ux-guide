@@ -36,6 +36,7 @@ export type ContentBlock =
       type: "toggle";
       title: string;
       text?: string;
+      blocks: ContentBlock[];
     }
   | {
       type: "rawTable";
@@ -63,6 +64,8 @@ export type ContentBlock =
       type: "table";
       columns: string[];
       rows: string[][];
+      showColumnHeaders?: boolean;
+      rowHeaders?: boolean;
     }
   | {
       type: "pathway";

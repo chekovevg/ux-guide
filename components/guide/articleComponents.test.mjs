@@ -60,7 +60,7 @@ test("maps semantic article blocks to the guide design-system layer", () => {
   assert.match(articleBlocksSource, /data-kind=\{calloutKind\}/);
   assert.match(articleSource, /<ArticleExampleCard block=\{block\} blockId=\{blockId\} \/>/);
   assert.match(articleSource, /<ArticleQuote block=\{block\} \/>/);
-  assert.match(articleSource, /<ArticleTable block=\{block\} \/>/);
+  assert.match(articleSource, /<ArticleTable block=\{block\} blockId=\{blockId\} \/>/);
   assert.match(exampleCardRule, /border: var\(--ds-border-width\) solid var\(--guide-callout-example-border\);/);
   assert.match(exampleCardRule, /background: var\(--guide-callout-example-bg\);/);
   assert.match(exampleCardRule, /padding: var\(--guide-article-card-padding\);/);
@@ -73,6 +73,28 @@ test("maps semantic article blocks to the guide design-system layer", () => {
   assert.match(quoteRule, /border-left: 4px solid var\(--ds-border-strong\);/);
   assert.match(tableRule, /border: var\(--ds-border-width\) solid var\(--guide-table-border\);/);
   assert.match(cssSource, /\.article-table th\s*\{[\s\S]*?background: var\(--guide-table-header-bg\);/);
+});
+
+test("renders recursive toggles and accessible responsive tables", () => {
+  assert.match(articleSource, /block\.blocks\.map\(\(childBlock, childIndex\) =>/);
+  assert.match(
+    articleSource,
+    /blockId=\{`\$\{blockId\}-child-\$\{childIndex \+ 1\}`\}/,
+  );
+  assert.match(
+    articleBlocksSource,
+    /scope=\{isBlankCorner \? undefined : "col"\}/,
+  );
+  assert.match(articleBlocksSource, /scope="row"/);
+  assert.match(articleBlocksSource, /data-column-headers=/);
+  assert.match(articleBlocksSource, /data-wide=\{isWide \? "true" : undefined\}/);
+  assert.match(articleBlocksSource, /role="region"/);
+  assert.match(articleBlocksSource, /tabIndex=\{0\}/);
+  assert.match(
+    cssSource,
+    /\.article-table\[data-wide="true"\] table\s*\{[\s\S]*?min-width: 1040px;/,
+  );
+  assert.match(cssSource, /\.article-table-row-header/);
 });
 
 test("keeps article components off raw visual Tailwind and legacy token APIs", () => {

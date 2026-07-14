@@ -67,6 +67,8 @@ input {
 
   .guide-grid {
     display: block;
+    min-width: 0;
+    overflow-x: clip;
   }
 
   .guide-article {
@@ -782,6 +784,7 @@ input {
   .article-table {
     width: 100%;
     overflow-x: auto;
+    overscroll-behavior-inline: contain;
     border: var(--ds-border-width) solid var(--guide-table-border);
     border-radius: var(--ds-radius-card);
     background: var(--guide-table-bg);
@@ -789,7 +792,7 @@ input {
 
   .article-table table {
     width: 100%;
-    min-width: 700px;
+    min-width: 100%;
     table-layout: fixed;
     border-collapse: separate;
     border-spacing: 0;
@@ -805,13 +808,39 @@ input {
     font-weight: 700;
     line-height: var(--ds-type-table-line);
     letter-spacing: var(--ds-letter-table);
+    overflow-wrap: anywhere;
     text-align: left;
     text-transform: uppercase;
     vertical-align: top;
   }
 
   .article-table th:first-child {
-    width: 84px;
+    width: 28%;
+  }
+
+  .article-table[data-wide="true"] table {
+    min-width: 1040px;
+  }
+
+  .article-table[data-column-headers="hidden"] th:first-child {
+    width: auto;
+  }
+
+  .article-table th.article-table-row-header {
+    border-right: var(--ds-border-width) solid var(--guide-table-border);
+    border-bottom: 0;
+    background: var(--guide-table-bg);
+    padding: var(--guide-table-cell-padding);
+    color: var(--ds-fg-default);
+    font-family: inherit;
+    font-size: var(--ds-type-table-size);
+    font-weight: 600;
+    line-height: var(--ds-type-table-line);
+    letter-spacing: var(--ds-letter-table);
+    overflow-wrap: anywhere;
+    text-align: left;
+    text-transform: none;
+    vertical-align: top;
   }
 
   .article-table td {
@@ -875,6 +904,11 @@ input {
     font-weight: 600;
     line-height: 22px;
     cursor: pointer;
+  }
+
+  .article-toggle-blocks {
+    min-width: 0;
+    margin-top: var(--ds-primitive-space-16);
   }
 
   .article-raw-table {
@@ -2203,6 +2237,12 @@ input {
   .article-update-help {
     flex-direction: column;
     gap: var(--ds-primitive-space-12);
+  }
+
+  @layer components {
+    .article-table table {
+      min-width: 700px;
+    }
   }
 }
 

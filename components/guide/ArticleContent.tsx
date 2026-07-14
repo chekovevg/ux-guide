@@ -222,6 +222,22 @@ function ContentBlockView({
           {block.text ? (
             <p className="type-body mt-4">{block.text}</p>
           ) : null}
+          {block.blocks.length ? (
+            <div className="article-block-stack article-toggle-blocks">
+              {block.blocks.map((childBlock, childIndex) => {
+                const childBlockId = `${blockId}-child-${childIndex + 1}`;
+
+                return (
+                  <ContentBlockView
+                    key={childBlockId}
+                    block={childBlock}
+                    blockId={`${blockId}-child-${childIndex + 1}`}
+                    calloutBadgeLabel={calloutBadgeLabel}
+                  />
+                );
+              })}
+            </div>
+          ) : null}
         </details>
       );
     case "rawTable":
@@ -258,7 +274,7 @@ function ContentBlockView({
       );
     case "table":
       return (
-        <ArticleTable block={block} />
+        <ArticleTable block={block} blockId={blockId} />
       );
     case "pathway":
       return (

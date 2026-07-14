@@ -23,13 +23,20 @@ export type GuideStructureHeading = {
 
 export type GuideStructureBlock = {
   type: string;
-  sourceBlockIndex: number;
+  sourceBlockIndex?: number;
   text?: string;
   image?: string;
+  children?: GuideStructureBlock[];
+  table?: {
+    columns: string[];
+    rows: string[][];
+    showColumnHeaders?: boolean;
+    rowHeaders?: boolean;
+  };
 };
 
 export type GuideStructure = {
-  schemaVersion: 2;
+  schemaVersion: 4;
   source: {
     type: "notion";
     notionPageId: string;

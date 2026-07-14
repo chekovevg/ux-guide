@@ -150,29 +150,61 @@ export function ArticleQuote({
 
 export function ArticleTable({
   block,
+  blockId,
 }: {
   block: Extract<ContentBlock, { type: "table" }>;
+  blockId: string;
 }) {
+  const showColumnHeaders = block.showColumnHeaders !== false;
+  const rowHeaders = block.rowHeaders === true;
+  const isWide = block.columns.length >= 5;
+  const regionLabel = block.columns.filter(Boolean).join(", ");
+
   return (
-    <div className="article-table">
+    <div
+      id={blockId}
+      className="article-table"
+      data-column-headers={showColumnHeaders ? "visible" : "hidden"}
+      data-row-headers={rowHeaders ? "true" : undefined}
+      data-wide={isWide ? "true" : undefined}
+      role="region"
+      aria-label={regionLabel}
+      tabIndex={0}
+    >
       <table>
-        <thead>
+        <thead className={showColumnHeaders ? undefined : "sr-only"}>
           <tr>
-            {block.columns.map((column) => (
-              <th key={column}>
-                {column}
-              </th>
-            ))}
+            {block.columns.map((column, columnIndex) => {
+              const isBlankCorner = rowHeaders && columnIndex === 0 && !column;
+
+              return (
+                <th
+                  key={columnIndex}
+                  scope={isBlankCorner ? undefined : "col"}
+                  aria-hidden={isBlankCorner ? true : undefined}
+                >
+                  {column}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
           {block.rows.map((row, rowIndex) => (
-            <tr key={`${rowIndex}-${row.join("-")}`}>
-              {row.map((cell, cellIndex) => (
-                <td key={`${rowIndex}-${cellIndex}`}>
-                  {cell}
-                </td>
-              ))}
+            <tr key={rowIndex}>
+              {row.map((cell, cellIndex) =>
+                rowHeaders && cellIndex === 0 ? (
+                  <th
+                    key={`${rowIndex}-${cellIndex}`}
+                    scope="row"
+                    className="article-table-row-header"
+                  >
+                    {cell}
+                  </th>
+                ) : (
+                  <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>
+                ),
+              )}
             </tr>
           ))}
         </tbody>
