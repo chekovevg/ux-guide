@@ -236,7 +236,7 @@ test("maps callout, checklist, quote, and table blocks to Figma article componen
   assert.match(cssSource, /\.article-checklist-icon\s*\{[\s\S]*?border-radius: var\(--figma-indent-space-4\);/);
   assert.match(cssSource, /\.article-checklist-icon\s*\{[\s\S]*?background: var\(--surface\);/);
   assert.match(cssSource, /\.article-checklist-item:has\(input:checked\) \.article-checklist-icon\s*\{[\s\S]*?background: var\(--accent\);/);
-  assert.match(cssSource, /\.article-checklist-text\s*\{[\s\S]*?padding-top: var\(--figma-indent-space-4\);/);
+  assert.match(cssSource, /\.article-checklist-text\s*\{[\s\S]*?padding-top: 0;/);
   assert.match(cssSource, /\.article-quote/);
   assert.match(cssSource, /\.article-table/);
 });
@@ -292,7 +292,11 @@ test("keeps article component geometry local and matches the mobile Figma contra
 
   assert.match(checklistRule, /gap: var\(--figma-indent-space-32\);/);
   assert.match(checklistListRule, /gap: var\(--figma-indent-space-18\);/);
-  assert.match(checklistItemRule, /gap: var\(--figma-indent-space-12\);/);
+  assert.match(checklistItemRule, /gap: var\(--figma-indent-space-8\);/);
+  assert.match(
+    cssRuleBody(".article-checklist-icon"),
+    /margin-top: calc\(\(var\(--type-body-line\) - 20px\) \/ 2\);/,
+  );
   assert.doesNotMatch(
     mobileArticleCss,
     /\.article-checklist\s*\{[^}]*gap:/s,
