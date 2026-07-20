@@ -56,6 +56,7 @@ function getBlockFragments(blocks: ContentBlock[] = []): string[] {
         add(block.text);
         block.paragraphs?.forEach(add);
         block.items?.forEach(add);
+        add(block.linkLabel);
         break;
       case "bulletedList":
       case "numberedList":

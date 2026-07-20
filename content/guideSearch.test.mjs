@@ -73,6 +73,34 @@ test("indexes chapter, section, and full-text fragments with anchored links", ()
   );
 });
 
+test("indexes callout link labels as searchable text", () => {
+  const index = buildIndex([
+    {
+      slug: "research-sample",
+      title: "Audience and sample",
+      sections: [
+        {
+          id: "respondent-count",
+          title: "How many respondents are needed?",
+          blocks: [
+            {
+              type: "callout",
+              variant: "tip",
+              text: "Open the detailed guide when you need more context.",
+              linkLabel: "Read the recruitment checklist",
+            },
+          ],
+        },
+      ],
+    },
+  ]);
+
+  assert.equal(
+    search.searchGuideIndex(index, "recruitment checklist").text[0].href,
+    "/en/guide/research-sample#respondent-count",
+  );
+});
+
 test("ranks exact, prefix, substring, then body matches", () => {
   const bodyOnlyChapter = {
     slug: "body",
