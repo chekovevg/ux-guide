@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useRef } from "react";
 import type * as React from "react";
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
+import { getGuideCopy } from "./guideCopy";
 import { getMobileContentsItems } from "./mobileContents.mjs";
 import {
   GuideLanguageMenu,
@@ -11,7 +12,6 @@ import {
 import type {
   GuideLanguageLink,
   GuideNavigationGroup,
-  GuideSearchItem,
   GuideThemeMode,
 } from "./types";
 import { useModalDialog } from "./useModalDialog";
@@ -66,78 +66,11 @@ export function MobileContentsSection({
   );
 }
 
-export function MobileSearchPanel({
-  items,
-  open,
-  onClose,
-}: {
-  items: GuideSearchItem[];
-  open: boolean;
-  onClose: () => void;
-}) {
-  const [query, setQuery] = useState("");
-
-  const results = useMemo(() => getSearchResults(items, query), [items, query]);
-
-  if (!open) {
-    return null;
-  }
-
-  return (
-    <section
-      aria-label="Search the guide"
-      aria-modal="true"
-      className="mobile-search-panel"
-      role="dialog"
-    >
-      <label className="mobile-search-control">
-        <span className="sr-only">Search</span>
-        <Search aria-hidden="true" className="size-5 shrink-0" />
-        <input
-          autoFocus
-          className="mobile-search-input"
-          placeholder="Search guide"
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <button
-          className="mobile-search-close"
-          aria-label="Close search"
-          type="button"
-          onClick={onClose}
-        >
-          <X aria-hidden="true" className="size-5" />
-        </button>
-      </label>
-      <div className="mobile-search-results">
-        {results.length ? (
-          results.map((item) => (
-            <a
-              key={`${item.type}-${item.href}`}
-              className="mobile-search-result"
-              href={item.href}
-              onClick={() => {
-                setQuery("");
-                onClose();
-              }}
-            >
-              <span>{item.label}</span>
-              <small>{item.eyebrow}</small>
-            </a>
-          ))
-        ) : (
-          <p className="mobile-search-empty">No results</p>
-        )}
-      </div>
-    </section>
-  );
-}
-
 export function MobileSiteMenu({
   backgroundRef,
   basePath = "/guide",
   languageLinks,
+  locale,
   navigationGroups,
   open,
   themeMode,
@@ -147,6 +80,7 @@ export function MobileSiteMenu({
   backgroundRef: React.RefObject<HTMLElement | null>;
   basePath?: string;
   languageLinks: GuideLanguageLink[];
+  locale: "ru" | "en";
   navigationGroups: GuideNavigationGroup[];
   open: boolean;
   themeMode: GuideThemeMode;
@@ -155,8 +89,9 @@ export function MobileSiteMenu({
 }) {
   const dialogRef = useRef<HTMLElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const menuTitle = "Guide chapters";
-  const closeLabel = "Close navigation";
+  const copy = getGuideCopy(locale);
+  const menuTitle = copy.menu.title;
+  const closeLabel = copy.menu.close;
   const navigationItems = getMobileContentsItems(
     navigationGroups.flatMap((group) => group.items),
     basePath,
@@ -176,7 +111,7 @@ export function MobileSiteMenu({
 
   return (
     <section
-      aria-label="Guide navigation"
+      aria-label={menuTitle}
       aria-modal="true"
       className="mobile-site-menu"
       ref={dialogRef}
@@ -195,7 +130,7 @@ export function MobileSiteMenu({
             <X aria-hidden="true" className="size-5" />
           </button>
         </div>
-        <nav aria-label="Guide chapters" className="mobile-guide-nav">
+        <nav aria-label={menuTitle} className="mobile-guide-nav">
           <ol className="mobile-guide-list">
             {navigationItems.map((item) => (
               <li key={item.slug}>
@@ -229,20 +164,4 @@ export function MobileSiteMenu({
       </div>
     </section>
   );
-}
-
-function getSearchResults(items: GuideSearchItem[], query: string) {
-  const normalizedQuery = query.trim().toLowerCase();
-
-  if (!normalizedQuery) {
-    return items.slice(0, 8);
-  }
-
-  return items
-    .filter((item) => {
-      const haystack = `${item.label} ${item.eyebrow}`.toLowerCase();
-
-      return haystack.includes(normalizedQuery);
-    })
-    .slice(0, 12);
 }

@@ -1,22 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { ChevronDown, ChevronUp, Search } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { ArticleContent } from "./ArticleContent";
+import { getGuideCopy } from "./guideCopy";
 import { GuideHeader } from "./GuideHeader";
 import { getNavigationLabel, GuideNavigation } from "./GuideNavigation";
-import {
-  MobileContentsSection,
-  MobileSearchPanel,
-  MobileSiteMenu,
-} from "./MobileChrome";
+import { GuideSearchDialog } from "./GuideSearchDialog";
+import { MobileContentsSection, MobileSiteMenu } from "./MobileChrome";
 import { PageToc } from "./PageToc";
 import type {
   GuideChapter,
   GuideLanguageLink,
   GuideNavigationGroup,
   GuideNavigationItem,
-  GuideSearchItem,
+  GuideSearchRecord,
   GuideSection,
   GuideThemeMode,
 } from "./types";
@@ -25,16 +23,20 @@ type GuideShellProps = {
   chapter: GuideChapter;
   chapterBasePath?: string;
   languageLinks: GuideLanguageLink[];
+  locale: "ru" | "en";
   navigation: GuideNavigationItem[];
   navigationGroups: GuideNavigationGroup[];
+  searchIndex: GuideSearchRecord[];
 };
 
 export function GuideShell({
   chapter,
   chapterBasePath = "/guide",
   languageLinks,
+  locale,
   navigation,
   navigationGroups,
+  searchIndex,
 }: GuideShellProps) {
   const appContentRef = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState(chapter.sections[0]?.id ?? "");
@@ -58,10 +60,8 @@ export function GuideShell({
     () => flattenSectionLinks(chapter.sections),
     [chapter.sections],
   );
-  const activeLocale = languageLinks.find((link) => link.active)?.locale ?? "ru";
-  const isEnglish = activeLocale === "en";
-  const pageTocTitle = isEnglish ? "On this page" : "На этой странице";
-  const chapterSearchLabel = isEnglish ? "Chapter" : "Глава";
+  const copy = getGuideCopy(locale);
+  const pageTocTitle = copy.pageContents;
   const activeLinkIndex = sectionLinks.findIndex((item) => item.id === activeId);
   const activeLink =
     activeLinkIndex >= 0 ? sectionLinks[activeLinkIndex] : sectionLinks[0];
@@ -83,31 +83,6 @@ export function GuideShell({
     () => getAdjacentNavigation(flatNavigation),
     [flatNavigation],
   );
-  const chapterNavLabel = getNavigationLabel(
-    chapter.slug,
-    chapter.title,
-    chapter.navTitle,
-  );
-  const searchItems = useMemo(
-    () => [
-      ...flatNavigation
-        .filter((item) => item.available)
-        .map((item) => ({
-          eyebrow: chapterSearchLabel,
-          href: getChapterHref(item.slug, chapterBasePath),
-          label: getNavigationLabel(item.slug, item.title, item.navTitle),
-          type: "chapter" as const,
-        })),
-      ...sectionLinks.map((item) => ({
-        eyebrow: chapterNavLabel,
-        href: `#${item.id}`,
-        label: item.title,
-        type: "section" as const,
-      })),
-    ],
-    [chapterBasePath, chapterNavLabel, chapterSearchLabel, flatNavigation, sectionLinks],
-  );
-
   useEffect(() => {
     const nodes = sectionLinks
       .map((item) => document.getElementById(item.id))
@@ -197,9 +172,14 @@ export function GuideShell({
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <div ref={appContentRef} className="guide-app-content">
         <GuideHeader
+          closeMenuLabel={copy.menu.close}
+          closeSearchLabel={copy.search.close}
           contentsOpen={contentsOpen}
           currentTitle={activeSectionTitle}
+          menuLabel={copy.menu.title}
           menuOpen={menuOpen}
+          pageContentsLabel={copy.pageContents}
+          searchLabel={copy.search.label}
           searchOpen={searchOpen}
           onContents={() => {
             setMenuOpen(false);
@@ -229,7 +209,9 @@ export function GuideShell({
             <GuideNavigation
               basePath={chapterBasePath}
               languageLinks={languageLinks}
+              navigationLabel={copy.menu.title}
               navigationGroups={groupedNavigation}
+              searchLabel={copy.search.label}
               sidebarCollapsed={sidebarCollapsed}
               themeMode={themeMode}
               onSearch={() => setSearchOpen(true)}
@@ -279,8 +261,10 @@ export function GuideShell({
       </div>
 
       {searchOpen ? (
-        <GuideSearchPanel
-          items={searchItems}
+        <GuideSearchDialog
+          backgroundRef={appContentRef}
+          index={searchIndex}
+          locale={locale}
           open={searchOpen}
           onClose={() => setSearchOpen(false)}
         />
@@ -290,17 +274,12 @@ export function GuideShell({
         backgroundRef={appContentRef}
         basePath={chapterBasePath}
         languageLinks={languageLinks}
+        locale={locale}
         navigationGroups={groupedNavigation}
         open={menuOpen}
         themeMode={themeMode}
         onClose={() => setMenuOpen(false)}
         onThemeChange={setThemeMode}
-      />
-
-      <MobileSearchPanel
-        items={searchItems}
-        open={searchOpen}
-        onClose={() => setSearchOpen(false)}
       />
     </div>
   );
@@ -369,94 +348,6 @@ function PageTocDropdown({
           />
         </div>
       ) : null}
-    </section>
-  );
-}
-
-function GuideSearchPanel({
-  items,
-  open,
-  onClose,
-}: {
-  items: GuideSearchItem[];
-  open: boolean;
-  onClose: () => void;
-}) {
-  const [query, setQuery] = useState("");
-  const normalizedQuery = query.trim();
-
-  const results = useMemo(
-    () => (normalizedQuery ? getSearchResults(items, normalizedQuery) : []),
-    [items, normalizedQuery],
-  );
-
-  const handleClose = () => {
-    setQuery("");
-    onClose();
-  };
-
-  if (!open) {
-    return null;
-  }
-
-  return (
-    <section
-      aria-label="Search the guide"
-      aria-modal="true"
-      className="search-dialog-backdrop"
-      role="dialog"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          handleClose();
-        }
-      }}
-    >
-      <div
-        className="search-dialog"
-        data-has-query={normalizedQuery ? "true" : undefined}
-        role="document"
-      >
-        <label className="search-dialog-control">
-          <span className="sr-only">Search</span>
-          <Search aria-hidden="true" className="size-4 shrink-0" />
-          <input
-            autoFocus
-            className="search-dialog-input"
-            placeholder="Search"
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          <button
-            className="search-dialog-escape"
-            aria-label="Close search"
-            type="button"
-            onClick={handleClose}
-          >
-            ESC
-          </button>
-        </label>
-
-        {normalizedQuery ? (
-          <div className="search-dialog-results">
-            {results.length ? (
-              results.map((item) => (
-                <a
-                  key={`${item.type}-${item.href}`}
-                  className="search-dialog-result"
-                  href={item.href}
-                  onClick={handleClose}
-                >
-                  <span>{item.label}</span>
-                  <small>{item.eyebrow}</small>
-                </a>
-              ))
-            ) : (
-              <p className="search-dialog-empty">No results</p>
-            )}
-          </div>
-        ) : null}
-      </div>
     </section>
   );
 }
@@ -563,20 +454,4 @@ function getChapterHref(slug: string, basePath = "/guide") {
     : basePath;
 
   return `${normalizedBasePath}/${slug}`;
-}
-
-function getSearchResults(items: GuideSearchItem[], query: string) {
-  const normalizedQuery = query.trim().toLowerCase();
-
-  if (!normalizedQuery) {
-    return items.slice(0, 8);
-  }
-
-  return items
-    .filter((item) => {
-      const haystack = `${item.label} ${item.eyebrow}`.toLowerCase();
-
-      return haystack.includes(normalizedQuery);
-    })
-    .slice(0, 12);
 }

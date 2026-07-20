@@ -1,7 +1,6 @@
 import type {
   ContentBlock,
   GuideChapter,
-  GuideSearchMatch,
   GuideSearchRecord,
   GuideSearchResults,
   GuideSection,

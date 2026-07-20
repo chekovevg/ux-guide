@@ -5,6 +5,9 @@ import test from "node:test";
 const headerSource = await readFile(new URL("./GuideHeader.tsx", import.meta.url), "utf8");
 const navigationSource = await readFile(new URL("./GuideNavigation.tsx", import.meta.url), "utf8");
 const mobileSource = await readFile(new URL("./MobileChrome.tsx", import.meta.url), "utf8");
+const searchDialogSource = await readFile(new URL("./GuideSearchDialog.tsx", import.meta.url), "utf8").catch(
+  (error) => (error.code === "ENOENT" ? "" : Promise.reject(error)),
+);
 const shellSource = await readFile(new URL("./GuideShell.tsx", import.meta.url), "utf8");
 const cssSource = await readFile(new URL("../../app/globals.css", import.meta.url), "utf8");
 
@@ -41,10 +44,10 @@ test("keeps sidebar links compact and chapter cards in docs reference structure"
 
 test("matches the flat Figma mobile guide navigation without desktop-only group labels", () => {
   const mobileContentsSource = mobileSource.match(
-    /export function MobileContentsSection[\s\S]*?export function MobileSearchPanel/,
+    /export function MobileContentsSection[\s\S]*?export function MobileSiteMenu/,
   )?.[0] ?? "";
   const mobileSiteMenuSource = mobileSource.match(
-    /export function MobileSiteMenu[\s\S]*?function getSearchResults/,
+    /export function MobileSiteMenu[\s\S]*$/,
   )?.[0] ?? "";
 
   assert.doesNotMatch(mobileContentsSource, /getMobileContentsItems/);
@@ -92,11 +95,11 @@ test("renders collapsed sidebar as a floating docs-style control pill", () => {
 });
 
 test("opens desktop search as a compact reference-style command input", () => {
-  assert.match(shellSource, /placeholder="Search"/);
-  assert.match(shellSource, /className="search-dialog-escape"/);
-  assert.match(shellSource, /\{normalizedQuery \? \(/);
-  assert.doesNotMatch(shellSource, /placeholder="Search guide"/);
-  assert.doesNotMatch(shellSource, /search-dialog-close/);
+  assert.match(searchDialogSource, /placeholder=\{copy\.search\.placeholder\}/);
+  assert.match(searchDialogSource, /className="search-dialog-escape"/);
+  assert.match(searchDialogSource, /getSuggestedGuideChapters/);
+  assert.doesNotMatch(shellSource, /function GuideSearchPanel/);
+  assert.doesNotMatch(mobileSource, /MobileSearchPanel/);
   assert.match(cssSource, /\.search-dialog-backdrop\s*\{[\s\S]*?backdrop-filter: blur\(4px\);/);
   assert.match(cssSource, /\.search-dialog-backdrop\s*\{[\s\S]*?padding-top: max\(16px, calc\(50vh - 250px\)\);/);
   assert.match(cssSource, /\.search-dialog-control\s*\{[\s\S]*?height: 54px;/);

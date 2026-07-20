@@ -11,6 +11,7 @@ import {
   getGuideNavigation,
   getGuideNavigationGroups,
 } from "@/content/guide";
+import { buildGuideSearchIndex } from "@/content/guideSearch";
 import type { GuideLocale } from "@/content/guideStructure";
 
 export type GuidePageProps = {
@@ -47,19 +48,28 @@ export async function GuidePageRoute({
   locale,
 }: GuidePageProps & { locale: GuideLocale }) {
   const { slug } = await params;
-  const chapter = getGuideChapter(slug, locale);
+  const chapters = getGuideChapters(locale);
+  const chapter = chapters.find((item) => item.slug === slug);
 
   if (!chapter) {
     notFound();
   }
 
+  const chapterBasePath = getGuideBasePath(locale);
+  const searchIndex = buildGuideSearchIndex(chapters, {
+    basePath: chapterBasePath,
+    locale,
+  });
+
   return (
     <GuideShell
       chapter={chapter}
-      chapterBasePath={getGuideBasePath(locale)}
+      chapterBasePath={chapterBasePath}
       languageLinks={getGuideLanguageLinks(chapter.slug, locale)}
+      locale={locale}
       navigation={getGuideNavigation(chapter.slug, locale)}
       navigationGroups={getGuideNavigationGroups(chapter.slug, locale)}
+      searchIndex={searchIndex}
     />
   );
 }

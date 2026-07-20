@@ -19,8 +19,10 @@ export { getNavigationLabel };
 
 type GuideNavigationProps = {
   navigationGroups: GuideNavigationGroup[];
+  navigationLabel: string;
   basePath?: string;
   languageLinks: GuideLanguageLink[];
+  searchLabel: string;
   sidebarCollapsed: boolean;
   themeMode: GuideThemeMode;
   onSearch?: () => void;
@@ -30,8 +32,10 @@ type GuideNavigationProps = {
 
 export function GuideNavigation({
   navigationGroups,
+  navigationLabel,
   basePath = "/guide",
   languageLinks,
+  searchLabel,
   sidebarCollapsed,
   themeMode,
   onSearch,
@@ -51,7 +55,7 @@ export function GuideNavigation({
         </button>
         <button
           className="guide-sidebar-icon-button"
-          aria-label="Search guide"
+          aria-label={searchLabel}
           type="button"
           onClick={onSearch}
         >
@@ -89,19 +93,19 @@ export function GuideNavigation({
       <div className="guide-sidebar-search-wrap">
         <button
           className="search-control sidebar-search"
-          aria-label="Search guide"
+          aria-label={searchLabel}
           type="button"
           onClick={onSearch}
         >
           <span className="flex min-w-0 items-center gap-2 truncate">
             <Search aria-hidden="true" className="size-4 shrink-0" />
-            <span className="truncate">Search</span>
+            <span className="truncate">{searchLabel}</span>
           </span>
           <kbd className="sidebar-search-kbd">Ctrl K</kbd>
         </button>
       </div>
 
-      <nav aria-label="Guide chapters" className="guide-sidebar-nav">
+      <nav aria-label={navigationLabel} className="guide-sidebar-nav">
         <ol className="guide-nav-list">
           {navigationItems.map((item) => (
             <li key={item.slug}>

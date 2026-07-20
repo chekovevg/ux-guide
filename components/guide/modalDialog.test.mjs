@@ -14,6 +14,7 @@ async function readSource(url) {
 
 const hookSource = await readSource(new URL("./useModalDialog.ts", import.meta.url));
 const mobileSource = await readSource(new URL("./MobileChrome.tsx", import.meta.url));
+const searchSource = await readSource(new URL("./GuideSearchDialog.tsx", import.meta.url));
 const shellSource = await readSource(new URL("./GuideShell.tsx", import.meta.url));
 const cssSource = await readSource(new URL("../../app/globals.css", import.meta.url));
 
@@ -53,7 +54,7 @@ test("applies inert to the background and restores its previous state", () => {
 
 test("renders an initially focused visible close control inside MobileSiteMenu", () => {
   const mobileSiteMenuSource = mobileSource.match(
-    /export function MobileSiteMenu[\s\S]*?(?=function getSearchResults)/,
+    /export function MobileSiteMenu[\s\S]*$/,
   )?.[0] ?? "";
   const dialogSource = mobileSiteMenuSource.match(
     /<section[\s\S]*?role="dialog"[\s\S]*?<\/section>/,
@@ -67,6 +68,16 @@ test("renders an initially focused visible close control inside MobileSiteMenu",
   assert.match(dialogSource, /<p className="mobile-site-menu-title">\{menuTitle\}<\/p>/);
   assert.match(dialogSource, /<button[\s\S]*?ref=\{closeButtonRef\}[\s\S]*?className="mobile-site-menu-close"/);
   assert.match(dialogSource, /<span className="sr-only">\{closeLabel\}<\/span>/);
+});
+
+test("focuses the search input and delegates modal lifecycle to the shared hook", () => {
+  assert.match(searchSource, /const dialogRef = useRef<HTMLElement>\(null\)/);
+  assert.match(searchSource, /const inputRef = useRef<HTMLInputElement>\(null\)/);
+  assert.match(searchSource, /useModalDialog\(\{[\s\S]*?onClose: handleClose/);
+  assert.match(searchSource, /initialFocusRef: inputRef/);
+  assert.match(searchSource, /backgroundRef/);
+  assert.match(searchSource, /ref=\{dialogRef\}/);
+  assert.match(searchSource, /ref=\{inputRef\}/);
 });
 
 test("keeps chapter navigation below the header and the footer at the bottom", () => {
@@ -88,7 +99,7 @@ test("places guide UI behind one background wrapper with modal siblings", () => 
   const main = shellSource.indexOf("<main", wrapperStart);
   const contents = shellSource.indexOf("<MobileContentsSection", wrapperStart);
   const menu = shellSource.indexOf("<MobileSiteMenu", wrapperStart);
-  const mobileSearch = shellSource.indexOf("<MobileSearchPanel", wrapperStart);
+  const guideSearch = shellSource.indexOf("<GuideSearchDialog", wrapperStart);
 
   assert.notEqual(wrapperStart, -1);
   assert.ok(header > wrapperStart && header < wrapperEnd);
@@ -99,7 +110,8 @@ test("places guide UI behind one background wrapper with modal siblings", () => 
     /<MobileContentsSection[\s\S]*?<\/div>\s*$/,
   );
   assert.ok(menu > wrapperEnd);
-  assert.ok(mobileSearch > wrapperEnd);
+  assert.ok(guideSearch > wrapperEnd);
+  assert.match(shellSource, /<GuideSearchDialog[\s\S]*?backgroundRef=\{appContentRef\}/);
   assert.match(shellSource, /<MobileSiteMenu[\s\S]*?backgroundRef=\{appContentRef\}/);
 });
 

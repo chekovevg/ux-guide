@@ -147,11 +147,3 @@ export type GuideSearchResults = {
   sections: GuideSearchMatch[];
   text: GuideSearchMatch[];
 };
-
-/** @deprecated Temporary compatibility for the existing search UI. */
-export type GuideSearchItem = {
-  eyebrow: string;
-  href: string;
-  label: string;
-  type: "chapter" | "section";
-};

@@ -8,9 +8,14 @@ import {
 } from "lucide-react";
 
 type GuideHeaderProps = {
+  closeMenuLabel: string;
+  closeSearchLabel: string;
   contentsOpen: boolean;
   currentTitle: string;
+  menuLabel: string;
   menuOpen: boolean;
+  pageContentsLabel: string;
+  searchLabel: string;
   searchOpen: boolean;
   onContents: () => void;
   onMenu: () => void;
@@ -18,9 +23,14 @@ type GuideHeaderProps = {
 };
 
 export function GuideHeader({
+  closeMenuLabel,
+  closeSearchLabel,
   contentsOpen,
   currentTitle,
+  menuLabel,
   menuOpen,
+  pageContentsLabel,
+  searchLabel,
   searchOpen,
   onContents,
   onMenu,
@@ -47,7 +57,7 @@ export function GuideHeader({
         <div className="guide-header-actions">
           <button
             className="icon-button"
-            aria-label={searchOpen ? "Close search" : "Search"}
+            aria-label={searchOpen ? closeSearchLabel : searchLabel}
             aria-expanded={searchOpen}
             type="button"
             onClick={onSearch}
@@ -60,7 +70,7 @@ export function GuideHeader({
           </button>
           <button
             className="icon-button"
-            aria-label={menuOpen ? "Close guide navigation" : "Open guide navigation"}
+            aria-label={menuOpen ? closeMenuLabel : menuLabel}
             aria-expanded={menuOpen}
             type="button"
             onClick={onMenu}
@@ -76,7 +86,7 @@ export function GuideHeader({
       {!menuOpen && !searchOpen ? (
         <button
           className="guide-header-nav-panel"
-          aria-label="Open page contents"
+          aria-label={pageContentsLabel}
           aria-expanded={contentsOpen}
           type="button"
           onClick={onContents}
