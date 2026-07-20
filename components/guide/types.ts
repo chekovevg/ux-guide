@@ -20,6 +20,8 @@ export type ContentBlock =
       variant: "example" | "tip" | "warning";
       title?: string;
       text: string;
+      paragraphs?: string[];
+      items?: string[];
       href?: string;
       linkLabel?: string;
     }
@@ -121,9 +123,27 @@ export type GuideLanguageLink = {
 
 export type GuideThemeMode = "light" | "dark";
 
-export type GuideSearchItem = {
-  eyebrow: string;
+export type GuideSearchRecord = {
+  id: string;
+  locale: "ru" | "en";
+  type: "chapter" | "section" | "text";
   href: string;
-  label: string;
-  type: "chapter" | "section";
+  chapterSlug: string;
+  chapterTitle: string;
+  sectionId?: string;
+  sectionTitle?: string;
+  title: string;
+  searchText: string;
+  excerptSource: string;
+  sourceOrder: number;
+};
+
+export type GuideSearchMatch = GuideSearchRecord & {
+  excerpt: string;
+};
+
+export type GuideSearchResults = {
+  chapters: GuideSearchMatch[];
+  sections: GuideSearchMatch[];
+  text: GuideSearchMatch[];
 };
