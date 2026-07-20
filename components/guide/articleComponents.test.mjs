@@ -209,8 +209,11 @@ test("maps callout, checklist, quote, and table blocks to Figma article componen
   assert.match(articleComponentSource, /className="article-callout-anchor/);
   assert.match(articleSource, /<ArticleExampleCard block=\{block\} blockId=\{blockId\} \/>/);
   assert.match(articleComponentSource, /className="article-example-card"/);
-  assert.match(articleComponentSource, /const textParagraphs = block\.text/);
+  assert.match(articleComponentSource, /const textParagraphs = block\.paragraphs \?\?/);
   assert.match(articleComponentSource, /\.split\(\/\\n\{2,\}\/\)/);
+  assert.match(articleBlocksSource, /<ul className="article-callout-list type-body">/);
+  assert.match(articleBlocksSource, /block\.items\.map\(\(item\) =>/);
+  assert.match(articleBlocksSource, /<li key=\{item\}>\{item\}<\/li>/);
   assert.match(articleChecklistSource, /className="article-checklist/);
   assert.match(articleChecklistSource, /className="article-checklist-text"/);
   assert.match(articleComponentSource, /className="article-quote/);
@@ -219,6 +222,7 @@ test("maps callout, checklist, quote, and table blocks to Figma article componen
   assert.match(articleComponentSource, /className="article-quote-author-title/);
   assert.match(articleComponentSource, /className="article-table/);
   assert.match(cssSource, /\.article-callout/);
+  assert.match(cssSource, /\.article-callout-list/);
   assert.match(cssSource, /\.article-example-card/);
   assert.match(cssSource, /\.article-example-card\s*\{[\s\S]*?background: var\(--surface-soft\);/);
   assert.match(cssSource, /\.article-example-card\s*\{[\s\S]*?padding: var\(--figma-indent-space-28\) var\(--figma-indent-padding-card\);/);

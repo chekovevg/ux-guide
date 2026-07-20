@@ -142,11 +142,46 @@ function parseProTipCallout(text: string): Extract<ContentBlock, { type: "callou
   };
 }
 
+function parseStructuredCalloutContent(text: string) {
+  const normalizedText = text.replace(/\r\n/g, "\n");
+  const chunks = normalizedText.split(/\n[ \t]*\n+/);
+
+  if (chunks.length < 2) {
+    return { text: normalizedText };
+  }
+
+  const paragraphs: string[] = [];
+  const items: string[] = [];
+
+  for (const chunk of chunks) {
+    const lines = chunk
+      .split("\n")
+      .filter((line) => line.trim());
+
+    if (!lines.length) {
+      continue;
+    }
+
+    if (lines.every((line) => /^[-*•] /.test(line))) {
+      items.push(...lines.map((line) => line.slice(2)));
+      continue;
+    }
+
+    paragraphs.push(chunk.trim());
+  }
+
+  return {
+    text: normalizedText,
+    ...(paragraphs.length ? { paragraphs } : {}),
+    ...(items.length ? { items } : {}),
+  };
+}
+
 function parseNotionCallout(text: string): Extract<ContentBlock, { type: "callout" }> {
   const proTip = parseProTipCallout(text);
 
   if (proTip) {
-    return proTip;
+    return { ...proTip, ...parseStructuredCalloutContent(proTip.text) };
   }
 
   const knownPrefixes: Array<{
@@ -181,11 +216,11 @@ function parseNotionCallout(text: string): Extract<ContentBlock, { type: "callou
       type: "callout",
       variant,
       title,
-      text: calloutText || text,
+      ...parseStructuredCalloutContent(calloutText || text),
     };
   }
 
-  return { type: "callout", variant: "example", text };
+  return { type: "callout", variant: "example", ...parseStructuredCalloutContent(text) };
 }
 
 function getKnownQuoteAuthorImage(
@@ -268,7 +303,8 @@ function notionBlocksToContentBlocks(blocks: GuideStructureBlock[]): ContentBloc
   };
 
   for (const block of blocks) {
-    const text = normalizeText(block.text);
+    const sourceText = block.text?.replace(/\r\n/g, "\n") ?? "";
+    const text = normalizeText(sourceText);
     const structuredTable = getStructuredTable(block);
 
     if (block.type === "bulleted_list") {
@@ -313,7 +349,7 @@ function notionBlocksToContentBlocks(blocks: GuideStructureBlock[]): ContentBloc
     } else if (block.type === "text" && text) {
       result.push({ type: "paragraph", text });
     } else if (block.type === "callout" && text) {
-      appendCallout(result, text);
+      appendCallout(result, sourceText);
     } else if (block.type === "quote" && text) {
       result.push(parseStructuredQuote(text) ?? { type: "paragraph", text });
     } else if (block.type === "toggle" && text) {

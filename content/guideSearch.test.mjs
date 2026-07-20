@@ -101,6 +101,37 @@ test("indexes callout link labels as searchable text", () => {
   );
 });
 
+test("indexes structured callout fields without duplicate text records", () => {
+  const index = buildIndex([
+    {
+      slug: "research-sample",
+      title: "Audience and sample",
+      sections: [
+        {
+          id: "respondent-count",
+          title: "How many respondents are needed?",
+          blocks: [
+            {
+              type: "callout",
+              variant: "example",
+              text: "Keep the task neutral.",
+              paragraphs: ["Keep the task neutral."],
+              items: ["Do not reveal the answer"],
+            },
+          ],
+        },
+      ],
+    },
+  ]);
+
+  const paragraphResults = search.searchGuideIndex(index, "keep the task neutral").text;
+  const itemResults = search.searchGuideIndex(index, "do not reveal the answer").text;
+
+  assert.equal(paragraphResults.length, 1);
+  assert.equal(itemResults.length, 1);
+  assert.equal(itemResults[0].excerptSource, "Do not reveal the answer");
+});
+
 test("ranks exact, prefix, substring, then body matches", () => {
   const bodyOnlyChapter = {
     slug: "body",

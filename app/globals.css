@@ -657,6 +657,17 @@ input {
     letter-spacing: 0;
   }
 
+  .article-callout-list {
+    margin: 0;
+    padding-left: var(--figma-indent-space-16);
+    color: var(--article-callout-text);
+    line-height: var(--type-body-line);
+  }
+
+  .article-callout-list li + li {
+    margin-top: var(--figma-indent-space-8);
+  }
+
   .article-callout-badge {
     width: max-content;
     border-radius: var(--figma-indent-space-4);

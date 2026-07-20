@@ -402,9 +402,16 @@ test("keeps guide content out of the data adapter hardcode", async () => {
   assert.match(guideSource, /function appendCallout/);
   assert.match(guideSource, /parseNotionCallout\(text\)/);
   assert.match(guideSource, /function parseProTipCallout/);
+  assert.match(guideSource, /function parseStructuredCalloutContent/);
+  assert.match(guideSource, /replace\(\/\\r\\n\/g, "\\n"\)/);
+  assert.match(guideSource, /lines\.every\(\(line\) =>/);
+  assert.match(guideSource, /\^\[-\*•\] /);
   assert.match(guideSource, /title: "Пример с рынка"/);
   assert.match(guideSource, /variant: "example"/);
-  assert.match(guideSource, /return \{ type: "callout", variant: "example", text \};/);
+  assert.match(
+    guideSource,
+    /return \{ type: "callout", variant: "example", \.\.\.parseStructuredCalloutContent\(text\) \};/,
+  );
   assert.doesNotMatch(guideSource, /return \{ type: "callout", variant: "tip", text \};/);
   assert.doesNotMatch(guideSource, /resistanceIntro/);
   assert.doesNotMatch(guideSource, /resistanceSections/);

@@ -11,7 +11,7 @@ export function ArticleExampleCard({
   block: Extract<ContentBlock, { type: "callout" }>;
   blockId: string;
 }) {
-  const textParagraphs = block.text
+  const textParagraphs = block.paragraphs ?? block.text
     .split(/\n{2,}/)
     .map((text) => text.trim())
     .filter(Boolean);
@@ -25,6 +25,11 @@ export function ArticleExampleCard({
             {text}
           </p>
         ))}
+        {block.items?.length ? (
+          <ul className="article-callout-list type-body">
+            {block.items.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        ) : null}
         {block.href && block.linkLabel ? (
           <a className="article-link article-example-card-link" href={block.href}>
             {block.linkLabel}
@@ -46,7 +51,7 @@ export function ArticleCallout({
 }) {
   const isTip = block.variant === "tip";
   const linkHref = block.href ?? `#${blockId}`;
-  const textParagraphs = block.text
+  const textParagraphs = block.paragraphs ?? block.text
     .split(/\n{2,}/)
     .map((text) => text.trim())
     .filter(Boolean);
@@ -62,6 +67,11 @@ export function ArticleCallout({
               {text}
             </p>
           ))}
+          {block.items?.length ? (
+            <ul className="article-callout-list type-body">
+              {block.items.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          ) : null}
           {block.href && block.linkLabel ? (
             <a className="article-link article-callout-link" href={block.href}>
               {block.linkLabel}

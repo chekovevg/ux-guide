@@ -107,3 +107,56 @@ test("uses raw table text only when structured data is malformed", () => {
     },
   ]);
 });
+
+test("preserves explicit callout paragraphs and list items after a known prefix", () => {
+  const blocks = adapter.notionBlocksToContentBlocks([
+    {
+      type: "callout",
+      text: "Scenario example\r\n\r\nKeep the task neutral.\r\n\r\n- Do not reveal the answer\r\n- Keep one intent per task",
+    },
+  ]);
+
+  assert.deepEqual(blocks, [
+    {
+      type: "callout",
+      variant: "example",
+      title: "Scenario example",
+      text: "Keep the task neutral.\n\n- Do not reveal the answer\n- Keep one intent per task",
+      paragraphs: ["Keep the task neutral."],
+      items: ["Do not reveal the answer", "Keep one intent per task"],
+    },
+  ]);
+});
+
+test("keeps flat callouts as legacy text without inferred structure", () => {
+  const blocks = adapter.notionBlocksToContentBlocks([
+    { type: "callout", text: "A Single Flat Sentence." },
+  ]);
+
+  assert.deepEqual(blocks, [
+    {
+      type: "callout",
+      variant: "example",
+      text: "A Single Flat Sentence.",
+    },
+  ]);
+});
+
+test("does not treat indented marker lines as structured callout items", () => {
+  const blocks = adapter.notionBlocksToContentBlocks([
+    {
+      type: "callout",
+      text: "Scenario example\n\nIntro.\n\n * Keep the task neutral.\n * Keep one intent per task",
+    },
+  ]);
+
+  assert.deepEqual(blocks, [
+    {
+      type: "callout",
+      variant: "example",
+      title: "Scenario example",
+      text: "Intro.\n\n * Keep the task neutral.\n * Keep one intent per task",
+      paragraphs: ["Intro.", "* Keep the task neutral.\n * Keep one intent per task"],
+    },
+  ]);
+});
