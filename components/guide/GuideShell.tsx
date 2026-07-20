@@ -152,12 +152,27 @@ export function GuideShell({
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
+        setMenuOpen(false);
+        setContentsOpen(false);
         setSearchOpen(true);
       }
     };
 
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const desktopQuery = window.matchMedia("(min-width: 64rem)");
+    const onDesktopChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        setMenuOpen(false);
+        setContentsOpen(false);
+      }
+    };
+
+    desktopQuery.addEventListener("change", onDesktopChange);
+    return () => desktopQuery.removeEventListener("change", onDesktopChange);
   }, []);
 
   useEffect(() => {

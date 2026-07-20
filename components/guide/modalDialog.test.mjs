@@ -112,3 +112,38 @@ test("keeps only the non-modal contents disclosure in shell Escape handling", ()
   assert.doesNotMatch(escapeEffect, /setMenuOpen\(false\)/);
   assert.doesNotMatch(escapeEffect, /setSearchOpen\(false\)/);
 });
+
+test("closes mobile layers before the search shortcut opens search", () => {
+  const shortcutCondition = shellSource.indexOf("(event.ctrlKey || event.metaKey)");
+  const shortcutEffectStart = shellSource.lastIndexOf("useEffect(() => {", shortcutCondition);
+  const shortcutEffectEnd = shellSource.indexOf("}, []);", shortcutCondition);
+  const shortcutEffect = shellSource.slice(shortcutEffectStart, shortcutEffectEnd);
+  const closeMenu = shortcutEffect.indexOf("setMenuOpen(false)");
+  const closeContents = shortcutEffect.indexOf("setContentsOpen(false)");
+  const openSearch = shortcutEffect.indexOf("setSearchOpen(true)");
+
+  assert.notEqual(shortcutCondition, -1);
+  assert.ok(closeMenu > 0 && closeMenu < openSearch);
+  assert.ok(closeContents > 0 && closeContents < openSearch);
+});
+
+test("closes mobile layers when the viewport crosses the desktop breakpoint", () => {
+  const mediaQuery = 'window.matchMedia("(min-width: 64rem)")';
+  const queryStart = shellSource.indexOf(mediaQuery);
+  const effectStart = shellSource.lastIndexOf("useEffect(() => {", queryStart);
+  const effectEnd = shellSource.indexOf("}, []);", queryStart);
+  const breakpointEffect = shellSource.slice(effectStart, effectEnd);
+
+  assert.notEqual(queryStart, -1);
+  assert.match(breakpointEffect, /if \(event\.matches\)/);
+  assert.match(breakpointEffect, /setMenuOpen\(false\)/);
+  assert.match(breakpointEffect, /setContentsOpen\(false\)/);
+  assert.match(
+    breakpointEffect,
+    /desktopQuery\.addEventListener\("change", onDesktopChange\)/,
+  );
+  assert.match(
+    breakpointEffect,
+    /desktopQuery\.removeEventListener\("change", onDesktopChange\)/,
+  );
+});
