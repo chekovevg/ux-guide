@@ -127,64 +127,78 @@ export function ArticleQuote({
 export function ArticleTable({
   block,
   blockId,
+  scrollRegionLabel,
 }: {
   block: Extract<ContentBlock, { type: "table" }>;
   blockId: string;
+  scrollRegionLabel: string;
 }) {
   const showColumnHeaders = block.showColumnHeaders !== false;
   const rowHeaders = block.rowHeaders === true;
+  const isScrollable = block.columns.length >= 3;
   const isWide = block.columns.length >= 5;
-  const regionLabel = block.columns.filter(Boolean).join(", ");
+  const regionLabel = block.columns
+    .map((column) => column.trim())
+    .filter(Boolean)
+    .join(", ");
 
   return (
-    <div
-      id={blockId}
-      className="article-table"
-      data-column-headers={showColumnHeaders ? "visible" : "hidden"}
-      data-row-headers={rowHeaders ? "true" : undefined}
-      data-wide={isWide ? "true" : undefined}
-      role={isWide ? "region" : undefined}
-      aria-label={isWide ? regionLabel : undefined}
-      tabIndex={isWide ? 0 : undefined}
-    >
-      <table>
-        <thead className={showColumnHeaders ? undefined : "sr-only"}>
-          <tr>
-            {block.columns.map((column, columnIndex) => {
-              const isBlankCorner = rowHeaders && columnIndex === 0 && !column;
+    <div className="article-table-shell">
+      <div
+        id={blockId}
+        className="article-table"
+        data-column-headers={showColumnHeaders ? "visible" : "hidden"}
+        data-row-headers={rowHeaders ? "true" : undefined}
+        data-scrollable={isScrollable ? "true" : undefined}
+        data-wide={isWide ? "true" : undefined}
+        role={isScrollable ? "region" : undefined}
+        aria-label={isScrollable ? regionLabel || scrollRegionLabel : undefined}
+        tabIndex={isScrollable ? 0 : undefined}
+      >
+        <table>
+          <thead className={showColumnHeaders ? undefined : "sr-only"}>
+            <tr>
+              {block.columns.map((column, columnIndex) => {
+                const isBlankCorner = rowHeaders && columnIndex === 0 && !column;
 
-              return (
-                <th
-                  key={columnIndex}
-                  scope={isBlankCorner ? undefined : "col"}
-                  aria-hidden={isBlankCorner ? true : undefined}
-                >
-                  {column}
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {block.rows.map((row, rowIndex) => (
-            <tr key={rowIndex}>
-              {row.map((cell, cellIndex) =>
-                rowHeaders && cellIndex === 0 ? (
+                return (
                   <th
-                    key={`${rowIndex}-${cellIndex}`}
-                    scope="row"
-                    className="article-table-row-header"
+                    key={columnIndex}
+                    scope={isBlankCorner ? undefined : "col"}
+                    aria-hidden={isBlankCorner ? true : undefined}
                   >
-                    {cell}
+                    {column}
                   </th>
-                ) : (
-                  <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>
-                ),
-              )}
+                );
+              })}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {block.rows.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {row.map((cell, cellIndex) =>
+                  rowHeaders && cellIndex === 0 ? (
+                    <th
+                      key={`${rowIndex}-${cellIndex}`}
+                      scope="row"
+                      className="article-table-row-header"
+                    >
+                      {cell}
+                    </th>
+                  ) : (
+                    <td key={`${rowIndex}-${cellIndex}`}>{cell}</td>
+                  ),
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {isScrollable ? (
+        <span className="article-table-scroll-cue" aria-hidden="true">
+          →
+        </span>
+      ) : null}
     </div>
   );
 }

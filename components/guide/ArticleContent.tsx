@@ -320,7 +320,13 @@ function ContentBlockView({
         <ArticleQuote block={block} />
       );
     case "table":
-      return <ArticleTable block={block} blockId={blockId} />;
+      return (
+        <ArticleTable
+          block={block}
+          blockId={blockId}
+          scrollRegionLabel={getGuideCopy(locale).table.scrollRegion}
+        />
+      );
     case "pathway":
       return (
         <aside className="rounded-[var(--radius-standard)] border border-[var(--foreground)] bg-[var(--foreground)] p-5 text-white">

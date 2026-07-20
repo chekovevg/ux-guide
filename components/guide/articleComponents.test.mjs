@@ -268,8 +268,16 @@ test("keeps article component geometry local and matches the mobile Figma contra
   assert.doesNotMatch(tableElementRule, /min-width: 700px;/);
   assert.match(
     mobileArticleCss,
-    /\.article-table table\s*\{[^}]*min-width: 700px;/s,
+    /\.article-table\[data-scrollable="true"\] table\s*\{[^}]*min-width: 700px;/s,
   );
+  assert.doesNotMatch(
+    mobileArticleCss,
+    /(?<!\[data-scrollable="true"\])\s+table\s*\{[^}]*min-width: 700px;/s,
+  );
+  assert.match(tableHeaderRule, /font-size: (?:max\([^;]*12px[^;]*\)|12px);/);
+  assert.match(tableHeaderRule, /line-height: (?:max\([^;]*18px[^;]*\)|18px);/);
+  assert.match(tableCellRule, /font-size: (?:max\([^;]*12px[^;]*\)|12px);/);
+  assert.match(tableCellRule, /line-height: (?:max\([^;]*18px[^;]*\)|18px);/);
   assert.match(tableFirstHeaderRule, /width: 28%;/);
   assert.doesNotMatch(tableFirstHeaderRule, /width: 84px;/);
   assert.match(tableHeaderRule, /overflow-wrap: anywhere;/);
@@ -344,7 +352,7 @@ test("delegates reusable article blocks without changing Figma class contracts",
   assert.match(articleSource, /<ArticleQuote block=\{block\} \/>/);
   assert.match(
     articleSource,
-    /<ArticleTable block=\{block\} blockId=\{blockId\} \/>/,
+    /<ArticleTable[\s\S]*block=\{block\}[\s\S]*blockId=\{blockId\}[\s\S]*scrollRegionLabel=\{getGuideCopy\(locale\)\.table\.scrollRegion\}[\s\S]*\/>/,
   );
 
   assert.match(articleBlocksSource, /className="article-example-card"/);
@@ -445,10 +453,15 @@ test("renders recursive toggle blocks with stable ids and native disclosure sema
 test("renders semantic headers and an accessible wide-table scroll region", () => {
   assert.match(articleBlocksSource, /const showColumnHeaders = block\.showColumnHeaders !== false/);
   assert.match(articleBlocksSource, /const rowHeaders = block\.rowHeaders === true/);
+  assert.match(articleBlocksSource, /const isScrollable = block\.columns\.length >= 3/);
   assert.match(articleBlocksSource, /const isWide = block\.columns\.length >= 5/);
-  assert.match(articleBlocksSource, /role=\{isWide \? "region" : undefined\}/);
-  assert.match(articleBlocksSource, /tabIndex=\{isWide \? 0 : undefined\}/);
+  assert.match(articleBlocksSource, /role=\{isScrollable \? "region" : undefined\}/);
+  assert.match(articleBlocksSource, /tabIndex=\{isScrollable \? 0 : undefined\}/);
+  assert.match(articleBlocksSource, /data-scrollable=\{isScrollable \? "true" : undefined\}/);
   assert.match(articleBlocksSource, /data-wide=\{isWide \? "true" : undefined\}/);
+  assert.match(articleBlocksSource, /regionLabel \|\| scrollRegionLabel/);
+  assert.match(articleBlocksSource, /className="article-table-shell"/);
+  assert.match(articleBlocksSource, /className="article-table-scroll-cue" aria-hidden="true"/);
   assert.match(articleBlocksSource, /<thead className=\{showColumnHeaders \? undefined : "sr-only"\}>/);
   assert.match(articleBlocksSource, /scope=\{isBlankCorner \? undefined : "col"\}/);
   assert.match(articleBlocksSource, /aria-hidden=\{isBlankCorner \? true : undefined\}/);
@@ -460,6 +473,10 @@ test("keeps wide-table scrolling local and balances the hidden-header matrix", (
   assert.match(cssRuleBody(".article-table"), /overflow-x: auto;/);
   assert.match(cssRuleBody(".article-table"), /overscroll-behavior-inline: contain;/);
   assert.match(cssRuleBody('.article-table[data-wide="true"] table'), /min-width: 1040px;/);
+  assert.match(
+    mobileArticleCss,
+    /\.article-table\[data-wide="true"\] table\s*\{[^}]*min-width: 1040px;/s,
+  );
   assert.match(cssRuleBody('.article-table[data-column-headers="hidden"] th:first-child'), /width: auto;/);
   assert.match(
     cssRuleBody(".article-table th.article-table-row-header"),

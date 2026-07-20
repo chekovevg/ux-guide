@@ -903,8 +903,16 @@ input {
     margin-top: var(--figma-indent-space-16);
   }
 
+  .article-table-shell {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+  }
+
   .article-table {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
     border: var(--figma-stroke-0-8) solid var(--line);
@@ -924,15 +932,33 @@ input {
     min-width: 1040px;
   }
 
+  .article-table-scroll-cue {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    bottom: 1px;
+    display: flex;
+    width: 52px;
+    align-items: center;
+    justify-content: flex-end;
+    border-radius: 0 var(--radius-standard) var(--radius-standard) 0;
+    background: linear-gradient(90deg, transparent, var(--surface-raised) 70%);
+    padding-right: var(--figma-indent-space-12);
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1;
+    pointer-events: none;
+  }
+
   .article-table th {
     border-bottom: var(--figma-stroke-0-8) solid var(--line);
     background: var(--surface-soft);
     padding: var(--figma-indent-space-16);
     color: var(--article-callout-text);
     font-family: var(--font-mono-guide);
-    font-size: var(--type-table-size);
+    font-size: max(var(--type-table-size), 12px);
     font-weight: 700;
-    line-height: var(--type-table-line);
+    line-height: max(var(--type-table-line), 18px);
     letter-spacing: var(--figma-typography-letter-space-table);
     overflow-wrap: anywhere;
     text-align: left;
@@ -955,9 +981,9 @@ input {
     padding: 20px var(--figma-indent-space-16) var(--figma-indent-space-16);
     color: var(--article-callout-text);
     font-family: inherit;
-    font-size: var(--type-table-size);
+    font-size: max(var(--type-table-size), 12px);
     font-weight: 600;
-    line-height: var(--type-table-line);
+    line-height: max(var(--type-table-line), 18px);
     letter-spacing: var(--figma-typography-letter-space-table);
     overflow-wrap: anywhere;
     text-align: left;
@@ -969,9 +995,9 @@ input {
     border-right: var(--figma-stroke-0-8) solid var(--line);
     padding: 20px var(--figma-indent-space-8) var(--figma-indent-space-16) var(--figma-indent-space-16);
     color: var(--article-callout-text);
-    font-size: var(--type-table-size);
+    font-size: max(var(--type-table-size), 12px);
     font-weight: 400;
-    line-height: var(--type-table-line);
+    line-height: max(var(--type-table-line), 18px);
     letter-spacing: var(--figma-typography-letter-space-table);
     overflow-wrap: anywhere;
     text-align: left;
@@ -1349,8 +1375,12 @@ input {
       letter-spacing: var(--figma-typography-letter-space-table);
     }
 
-    .article-table table {
+    .article-table[data-scrollable="true"] table {
       min-width: 700px;
+    }
+
+    .article-table[data-wide="true"] table {
+      min-width: 1040px;
     }
   }
 }

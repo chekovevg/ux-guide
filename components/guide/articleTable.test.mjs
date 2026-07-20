@@ -29,14 +29,15 @@ new Function("exports", "require", "module", compiledSource)(
 
 const { ArticleTable } = tableModule.exports;
 
-test("keeps narrow tables semantic without adding an unnecessary keyboard stop", () => {
+test("keeps two-column tables semantic without scroll-region affordances", () => {
   const markup = renderToStaticMarkup(
     React.createElement(ArticleTable, {
       blockId: "methods-table",
+      scrollRegionLabel: "Scrollable table",
       block: {
         type: "table",
-        columns: ["Method", "How it works", "Helps validate"],
-        rows: [["First click", "Pick a target", "Information scent"]],
+        columns: ["Method", "How it works"],
+        rows: [["First click", "Pick a target"]],
       },
     }),
   );
@@ -45,7 +46,32 @@ test("keeps narrow tables semantic without adding an unnecessary keyboard stop",
   assert.doesNotMatch(markup, /role="region"/);
   assert.doesNotMatch(markup, /aria-label=/);
   assert.doesNotMatch(markup, /tabindex="0"/);
+  assert.doesNotMatch(markup, /data-scrollable=/);
   assert.doesNotMatch(markup, /data-wide=/);
+  assert.doesNotMatch(markup, /article-table-scroll-cue/);
+  assert.equal((markup.match(/scope="col"/g) ?? []).length, 2);
+});
+
+test("makes three-column tables named keyboard-scrollable regions with a decorative cue", () => {
+  const markup = renderToStaticMarkup(
+    React.createElement(ArticleTable, {
+      blockId: "comparison-table",
+      scrollRegionLabel: "Scrollable table",
+      block: {
+        type: "table",
+        columns: ["Method", "How it works", "Helps validate"],
+        rows: [["First click", "Pick a target", "Information scent"]],
+      },
+    }),
+  );
+
+  assert.match(markup, /class="article-table-shell"/);
+  assert.match(markup, /data-scrollable="true"/);
+  assert.match(markup, /role="region"/);
+  assert.match(markup, /aria-label="Method, How it works, Helps validate"/);
+  assert.match(markup, /tabindex="0"/);
+  assert.doesNotMatch(markup, /data-wide=/);
+  assert.match(markup, /class="article-table-scroll-cue" aria-hidden="true"/);
   assert.equal((markup.match(/scope="col"/g) ?? []).length, 3);
 });
 
@@ -53,6 +79,7 @@ test("renders row headers and hidden column headers with table semantics", () =>
   const matrixMarkup = renderToStaticMarkup(
     React.createElement(ArticleTable, {
       blockId: "matrix-table",
+      scrollRegionLabel: "Scrollable table",
       block: {
         type: "table",
         columns: ["", "Stage one", "Stage two", "Stage three", "Stage four"],
@@ -65,6 +92,7 @@ test("renders row headers and hidden column headers with table semantics", () =>
   const descriptionsMarkup = renderToStaticMarkup(
     React.createElement(ArticleTable, {
       blockId: "description-table",
+      scrollRegionLabel: "Scrollable table",
       block: {
         type: "table",
         columns: ["Stage one", "Stage two", "Stage three", "Stage four", "Stage five"],
@@ -76,6 +104,7 @@ test("renders row headers and hidden column headers with table semantics", () =>
   );
 
   assert.match(matrixMarkup, /data-wide="true"/);
+  assert.match(matrixMarkup, /data-scrollable="true"/);
   assert.match(matrixMarkup, /data-row-headers="true"/);
   assert.match(matrixMarkup, /role="region"/);
   assert.match(matrixMarkup, /aria-label="Stage one, Stage two, Stage three, Stage four"/);
@@ -88,4 +117,20 @@ test("renders row headers and hidden column headers with table semantics", () =>
   assert.match(descriptionsMarkup, /data-column-headers="hidden"/);
   assert.match(descriptionsMarkup, /<thead class="sr-only">/);
   assert.equal((descriptionsMarkup.match(/scope="col"/g) ?? []).length, 5);
+});
+
+test("uses the localized generic label when every column header is blank", () => {
+  const markup = renderToStaticMarkup(
+    React.createElement(ArticleTable, {
+      blockId: "blank-headers-table",
+      scrollRegionLabel: "Прокручиваемая таблица",
+      block: {
+        type: "table",
+        columns: ["", "", ""],
+        rows: [["One", "Two", "Three"]],
+      },
+    }),
+  );
+
+  assert.match(markup, /aria-label="Прокручиваемая таблица"/);
 });
