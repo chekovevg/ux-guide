@@ -59,6 +59,7 @@ export function GuideHeader({
             className="icon-button"
             aria-label={searchOpen ? closeSearchLabel : searchLabel}
             aria-expanded={searchOpen}
+            data-guide-search-trigger=""
             type="button"
             onClick={onSearch}
           >

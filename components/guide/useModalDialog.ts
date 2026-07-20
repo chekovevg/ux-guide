@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type * as React from "react";
+import { getFocusRestoreTarget } from "./modalFocus";
 
 type ModalDialogOptions = {
   open: boolean;
@@ -9,6 +10,7 @@ type ModalDialogOptions = {
   dialogRef: React.RefObject<HTMLElement | null>;
   initialFocusRef?: React.RefObject<HTMLElement | null>;
   backgroundRef: React.RefObject<HTMLElement | null>;
+  returnFocusSelector?: string;
 };
 
 const focusableSelector = [
@@ -26,6 +28,7 @@ export function useModalDialog({
   dialogRef,
   initialFocusRef,
   backgroundRef,
+  returnFocusSelector,
 }: ModalDialogOptions): void {
   const onCloseRef = useRef(onClose);
 
@@ -122,9 +125,15 @@ export function useModalDialog({
         background.removeAttribute("inert");
       }
 
-      if (previouslyFocused?.isConnected) {
+      if (returnFocusSelector) {
+        const focusTarget = getFocusRestoreTarget(
+          previouslyFocused,
+          document.querySelectorAll<HTMLElement>(returnFocusSelector),
+        );
+        focusTarget?.focus();
+      } else if (previouslyFocused?.isConnected) {
         previouslyFocused.focus();
       }
     };
-  }, [backgroundRef, dialogRef, initialFocusRef, open]);
+  }, [backgroundRef, dialogRef, initialFocusRef, open, returnFocusSelector]);
 }

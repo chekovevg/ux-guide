@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import ts from "typescript";
 
 async function readSource(url) {
   return readFile(url, "utf8").catch((error) => {
@@ -13,10 +14,65 @@ async function readSource(url) {
 }
 
 const hookSource = await readSource(new URL("./useModalDialog.ts", import.meta.url));
+const focusRestoreSource = await readSource(new URL("./modalFocus.ts", import.meta.url));
 const mobileSource = await readSource(new URL("./MobileChrome.tsx", import.meta.url));
 const searchSource = await readSource(new URL("./GuideSearchDialog.tsx", import.meta.url));
+const headerSource = await readSource(new URL("./GuideHeader.tsx", import.meta.url));
+const navigationSource = await readSource(new URL("./GuideNavigation.tsx", import.meta.url));
 const shellSource = await readSource(new URL("./GuideShell.tsx", import.meta.url));
 const cssSource = await readSource(new URL("../../app/globals.css", import.meta.url));
+const compiledFocusRestoreSource = ts.transpileModule(focusRestoreSource, {
+  compilerOptions: {
+    module: ts.ModuleKind.ESNext,
+    target: ts.ScriptTarget.ES2022,
+  },
+}).outputText;
+const focusRestore = await import(
+  `data:text/javascript;base64,${Buffer.from(compiledFocusRestoreSource).toString("base64")}`
+);
+const getFocusRestoreTarget =
+  focusRestore.getFocusRestoreTarget ?? (() => null);
+
+function createFocusTarget({
+  connected = true,
+  hidden = false,
+  visible = true,
+} = {}) {
+  return {
+    hidden,
+    isConnected: connected,
+    getClientRects: () => (visible ? [{}] : []),
+  };
+}
+
+test("keeps the connected visible original return-focus target", () => {
+  const original = createFocusTarget();
+  const equivalent = createFocusTarget();
+
+  assert.equal(getFocusRestoreTarget(original, [equivalent]), original);
+});
+
+test("falls back past disconnected and hidden equivalents when the original is not visible", () => {
+  const zeroRectOriginal = createFocusTarget({ visible: false });
+  const disconnected = createFocusTarget({ connected: false });
+  const hidden = createFocusTarget({ hidden: true });
+  const zeroRect = createFocusTarget({ visible: false });
+  const visibleEquivalent = createFocusTarget();
+
+  assert.equal(
+    getFocusRestoreTarget(zeroRectOriginal, [
+      disconnected,
+      hidden,
+      zeroRect,
+      visibleEquivalent,
+    ]),
+    visibleEquivalent,
+  );
+  assert.equal(
+    getFocusRestoreTarget(createFocusTarget({ connected: false }), [hidden]),
+    null,
+  );
+});
 
 test("stores the active trigger and restores focus when it remains connected", () => {
   assert.match(hookSource, /document\.activeElement instanceof HTMLElement/);
@@ -78,6 +134,14 @@ test("focuses the search input and delegates modal lifecycle to the shared hook"
   assert.match(searchSource, /backgroundRef/);
   assert.match(searchSource, /ref=\{dialogRef\}/);
   assert.match(searchSource, /ref=\{inputRef\}/);
+});
+
+test("marks every search trigger and opts only search into equivalent focus fallback", () => {
+  assert.equal((headerSource.match(/data-guide-search-trigger/g) ?? []).length, 1);
+  assert.equal((navigationSource.match(/data-guide-search-trigger/g) ?? []).length, 2);
+  assert.match(searchSource, /returnFocusSelector: "\[data-guide-search-trigger\]"/);
+  assert.match(hookSource, /returnFocusSelector\?: string/);
+  assert.doesNotMatch(mobileSource, /returnFocusSelector/);
 });
 
 test("keeps chapter navigation below the header and the footer at the bottom", () => {

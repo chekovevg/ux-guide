@@ -70,6 +70,7 @@ export function GuideSearchDialog({
     dialogRef,
     initialFocusRef: inputRef,
     backgroundRef,
+    returnFocusSelector: "[data-guide-search-trigger]",
   });
 
   if (!open) {

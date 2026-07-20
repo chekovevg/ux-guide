@@ -56,6 +56,7 @@ export function GuideNavigation({
         <button
           className="guide-sidebar-icon-button"
           aria-label={searchLabel}
+          data-guide-search-trigger=""
           type="button"
           onClick={onSearch}
         >
@@ -94,6 +95,7 @@ export function GuideNavigation({
         <button
           className="search-control sidebar-search"
           aria-label={searchLabel}
+          data-guide-search-trigger=""
           type="button"
           onClick={onSearch}
         >
