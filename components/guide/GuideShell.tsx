@@ -44,17 +44,8 @@ export function GuideShell({
   const [contentsOpen, setContentsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [themeMode, setThemeMode] = useState<GuideThemeMode>(() => {
-    if (typeof window === "undefined") {
-      return "light";
-    }
-
-    const storedTheme = window.localStorage.getItem("wynde-guide-theme");
-
-    return storedTheme === "dark" || storedTheme === "light"
-      ? storedTheme
-      : "light";
-  });
+  const [themeMode, setThemeMode] = useState<GuideThemeMode>("light");
+  const [themeReady, setThemeReady] = useState(false);
 
   const sectionLinks = useMemo(
     () => flattenSectionLinks(chapter.sections),
@@ -83,6 +74,29 @@ export function GuideShell({
     () => getAdjacentNavigation(flatNavigation),
     [flatNavigation],
   );
+  useEffect(() => {
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) return;
+
+      try {
+        const storedTheme = window.localStorage.getItem("wynde-guide-theme");
+        if (storedTheme === "light" || storedTheme === "dark") {
+          setThemeMode(storedTheme);
+        }
+      } catch {
+        // Keep the deterministic light theme when storage is unavailable.
+      }
+
+      setThemeReady(true);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   useEffect(() => {
     const nodes = sectionLinks
       .map((item) => document.getElementById(item.id))
@@ -164,9 +178,16 @@ export function GuideShell({
   }, [menuOpen, searchOpen]);
 
   useEffect(() => {
+    if (!themeReady) return;
+
     document.documentElement.dataset.theme = themeMode;
-    window.localStorage.setItem("wynde-guide-theme", themeMode);
-  }, [themeMode]);
+
+    try {
+      window.localStorage.setItem("wynde-guide-theme", themeMode);
+    } catch {
+      // Keep theme controls usable when storage is unavailable.
+    }
+  }, [themeMode, themeReady]);
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
@@ -176,12 +197,15 @@ export function GuideShell({
           closeSearchLabel={copy.search.close}
           contentsOpen={contentsOpen}
           currentTitle={activeSectionTitle}
+          hasContents={sectionLinks.length > 0}
           menuLabel={copy.menu.title}
           menuOpen={menuOpen}
           pageContentsLabel={copy.pageContents}
           searchLabel={copy.search.label}
           searchOpen={searchOpen}
           onContents={() => {
+            if (!sectionLinks.length) return;
+
             setMenuOpen(false);
             setSearchOpen(false);
             setContentsOpen((value) => !value);

@@ -111,3 +111,42 @@ test("keeps desktop header free of the removed global search control", () => {
   assert.doesNotMatch(headerSource, /header-search/);
   assert.match(shellSource, /onSearch=\{\(\) => setSearchOpen\(true\)\}/);
 });
+
+test("keeps the mobile chapter row noninteractive when the page has no contents", () => {
+  assert.match(headerSource, /hasContents: boolean/);
+  assert.match(headerSource, /hasContents \? \(/);
+  assert.match(
+    headerSource,
+    /<div\s+className="guide-header-nav-panel"[\s\S]*?data-static="true"[\s\S]*?aria-label=\{currentTitle\}[\s\S]*?<span className="guide-header-nav-dot" aria-hidden="true" \/>[\s\S]*?<span>\{currentTitle\}<\/span>[\s\S]*?<\/div>/,
+  );
+
+  const staticRowSource = headerSource.match(
+    /<div\s+className="guide-header-nav-panel"[\s\S]*?data-static="true"[\s\S]*?<\/div>/,
+  )?.[0] ?? "";
+  assert.doesNotMatch(staticRowSource, /<button|Chevron|aria-expanded/);
+  assert.match(shellSource, /hasContents=\{sectionLinks\.length > 0\}/);
+});
+
+test("does not expose or open empty mobile contents", () => {
+  const mobileContentsSource = mobileSource.match(
+    /export function MobileContentsSection[\s\S]*?export function MobileSiteMenu/,
+  )?.[0] ?? "";
+
+  assert.match(mobileContentsSource, /if \(!open \|\| links\.length === 0\) \{\s*return null;/);
+  assert.match(
+    shellSource,
+    /onContents=\{\(\) => \{\s*if \(!sectionLinks\.length\) return;/,
+  );
+});
+
+test("hydrates with light theme before applying the stored preference after mount", () => {
+  assert.match(shellSource, /useState<GuideThemeMode>\("light"\)/);
+  assert.doesNotMatch(shellSource, /useState<GuideThemeMode>\(\(\) =>/);
+  assert.match(shellSource, /const \[themeReady, setThemeReady\] = useState\(false\)/);
+  assert.match(shellSource, /useEffect\(\(\) => \{[\s\S]*?queueMicrotask\(\(\) => \{[\s\S]*?localStorage\.getItem\("wynde-guide-theme"\)/);
+  assert.match(shellSource, /return \(\) => \{\s*active = false;/);
+  assert.match(shellSource, /if \(!themeReady\) return;/);
+  assert.match(shellSource, /localStorage\.setItem\("wynde-guide-theme", themeMode\)/);
+  assert.match(shellSource, /\}, \[themeMode, themeReady\]\)/);
+  assert.doesNotMatch(shellSource, /suppressHydrationWarning/);
+});

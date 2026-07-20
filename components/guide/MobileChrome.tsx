@@ -35,7 +35,7 @@ export function MobileContentsSection({
   open: boolean;
   onNavigate: () => void;
 }) {
-  if (!open) {
+  if (!open || links.length === 0) {
     return null;
   }
 

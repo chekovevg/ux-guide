@@ -12,6 +12,7 @@ type GuideHeaderProps = {
   closeSearchLabel: string;
   contentsOpen: boolean;
   currentTitle: string;
+  hasContents: boolean;
   menuLabel: string;
   menuOpen: boolean;
   pageContentsLabel: string;
@@ -27,6 +28,7 @@ export function GuideHeader({
   closeSearchLabel,
   contentsOpen,
   currentTitle,
+  hasContents,
   menuLabel,
   menuOpen,
   pageContentsLabel,
@@ -85,21 +87,32 @@ export function GuideHeader({
         </div>
       </div>
       {!menuOpen && !searchOpen ? (
-        <button
-          className="guide-header-nav-panel"
-          aria-label={pageContentsLabel}
-          aria-expanded={contentsOpen}
-          type="button"
-          onClick={onContents}
-        >
-          <span className="guide-header-nav-dot" aria-hidden="true" />
-          <span>{currentTitle}</span>
-          {contentsOpen ? (
-            <ChevronUp aria-hidden="true" className="size-4" />
-          ) : (
-            <ChevronDown aria-hidden="true" className="size-4" />
-          )}
-        </button>
+        hasContents ? (
+          <button
+            className="guide-header-nav-panel"
+            aria-label={pageContentsLabel}
+            aria-expanded={contentsOpen}
+            type="button"
+            onClick={onContents}
+          >
+            <span className="guide-header-nav-dot" aria-hidden="true" />
+            <span>{currentTitle}</span>
+            {contentsOpen ? (
+              <ChevronUp aria-hidden="true" className="size-4" />
+            ) : (
+              <ChevronDown aria-hidden="true" className="size-4" />
+            )}
+          </button>
+        ) : (
+          <div
+            className="guide-header-nav-panel"
+            data-static="true"
+            aria-label={currentTitle}
+          >
+            <span className="guide-header-nav-dot" aria-hidden="true" />
+            <span>{currentTitle}</span>
+          </div>
+        )
       ) : null}
     </header>
   );
