@@ -2302,6 +2302,11 @@ input {
 
 @media (min-width: 64rem) {
   @layer components {
+    .article-table[data-scrollable="true"]:not([data-wide="true"])
+      + .article-table-scroll-cue {
+      display: none;
+    }
+
     .guide-header {
       display: none;
     }

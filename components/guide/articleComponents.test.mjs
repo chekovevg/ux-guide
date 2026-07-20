@@ -41,6 +41,9 @@ const mobileArticleCss = cssSource.slice(
   mobileArticleCssStart,
   mobileArticleCssEnd,
 );
+const desktopArticleCss = cssSource.slice(
+  cssSource.lastIndexOf("@media (min-width: 64rem)"),
+);
 
 function cssRuleBody(selector) {
   const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -484,6 +487,13 @@ test("keeps wide-table scrolling local and balances the hidden-header matrix", (
   );
   assert.match(cssRuleBody(".article-toggle-blocks"), /min-width: 0;/);
   assert.match(cssRuleBody(".article-toggle-blocks"), /margin-top: var\(--figma-indent-space-16\);/);
+});
+
+test("hides the scroll cue when a non-wide table fits on desktop", () => {
+  assert.match(
+    desktopArticleCss,
+    /\.article-table\[data-scrollable="true"\]:not\(\[data-wide="true"\]\)\s*\+\s*\.article-table-scroll-cue\s*\{[^}]*display: none;/s,
+  );
 });
 
 test("renders Notion bullet groups as semantic unordered lists", () => {
