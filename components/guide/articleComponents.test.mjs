@@ -13,7 +13,15 @@ const articleBlocksSource = await readFile(
   new URL("./ArticleBlocks.tsx", import.meta.url),
   "utf8",
 ).catch(() => "");
-const articleComponentSource = `${articleSource}\n${articleBlocksSource}`;
+const articleChecklistSource = await readFile(
+  new URL("./ArticleChecklist.tsx", import.meta.url),
+  "utf8",
+).catch(() => "");
+const guideShellSource = await readFile(
+  new URL("./GuideShell.tsx", import.meta.url),
+  "utf8",
+);
+const articleComponentSource = `${articleSource}\n${articleBlocksSource}\n${articleChecklistSource}`;
 const cssSource = await readFile(
   new URL("../../app/globals.css", import.meta.url),
   "utf8",
@@ -184,9 +192,10 @@ test("renders clickable article heading links with hover icons", () => {
 });
 
 test("uses lucide icons instead of malformed exported Figma icon SVGs", () => {
-  assert.match(articleComponentSource, /import \{[^}]*\bCheck\b[^}]*\bLink as LucideLink\b[^}]*\} from "lucide-react"/s);
+  assert.match(articleBlocksSource, /import \{[^}]*\bLink as LucideLink\b[^}]*\} from "lucide-react"/s);
+  assert.match(articleChecklistSource, /import \{ Check \} from "lucide-react"/);
   assert.match(articleComponentSource, /<LucideLink aria-hidden="true"/);
-  assert.match(articleComponentSource, /<Check className="size-3" strokeWidth=\{3\}/);
+  assert.match(articleChecklistSource, /<Check[^>]*aria-hidden="true"[^>]*className="size-3"[^>]*strokeWidth=\{3\}/s);
   assert.doesNotMatch(articleComponentSource, /\/figma\/icon-link-heading\.svg/);
   assert.doesNotMatch(articleComponentSource, /\/figma\/icon-link-callout\.svg/);
   assert.doesNotMatch(articleComponentSource, /\/figma\/icon-checkbox-checked\.svg/);
@@ -202,11 +211,8 @@ test("maps callout, checklist, quote, and table blocks to Figma article componen
   assert.match(articleComponentSource, /className="article-example-card"/);
   assert.match(articleComponentSource, /const textParagraphs = block\.text/);
   assert.match(articleComponentSource, /\.split\(\/\\n\{2,\}\/\)/);
-  assert.match(articleComponentSource, /className="article-checklist/);
-  assert.match(articleSource, /checklistTitle=\{block\.type === "todoList" \? chapter\.title : undefined\}/);
-  assert.match(articleSource, /checklistAccentItemIndex=\{block\.type === "todoList" \? 4 : undefined\}/);
-  assert.match(articleComponentSource, /className="article-checklist-text"/);
-  assert.match(articleComponentSource, /data-accent=\{index === accentItemIndex \? "true" : undefined\}/);
+  assert.match(articleChecklistSource, /className="article-checklist/);
+  assert.match(articleChecklistSource, /className="article-checklist-text"/);
   assert.match(articleComponentSource, /className="article-quote/);
   assert.match(articleComponentSource, /className="article-quote-avatar/);
   assert.match(articleComponentSource, /className="article-quote-author-name/);
@@ -221,9 +227,9 @@ test("maps callout, checklist, quote, and table blocks to Figma article componen
   assert.match(cssSource, /\.article-checklist/);
   assert.match(cssSource, /\.article-checklist-title\s*\{[\s\S]*?letter-spacing: var\(--figma-typography-letter-space-h3\);/);
   assert.match(cssSource, /\.article-checklist-icon\s*\{[\s\S]*?border-radius: var\(--figma-indent-space-4\);/);
-  assert.match(cssSource, /\.article-checklist-icon\s*\{[\s\S]*?background: var\(--accent\);/);
+  assert.match(cssSource, /\.article-checklist-icon\s*\{[\s\S]*?background: var\(--surface\);/);
+  assert.match(cssSource, /\.article-checklist-item:has\(input:checked\) \.article-checklist-icon\s*\{[\s\S]*?background: var\(--accent\);/);
   assert.match(cssSource, /\.article-checklist-text\s*\{[\s\S]*?padding-top: var\(--figma-indent-space-4\);/);
-  assert.match(cssSource, /\.article-checklist-text\[data-accent="true"\]\s*\{[\s\S]*?color: var\(--accent\);/);
   assert.match(cssSource, /\.article-quote/);
   assert.match(cssSource, /\.article-table/);
 });
@@ -321,7 +327,6 @@ test("delegates reusable article blocks without changing Figma class contracts",
   for (const name of [
     "ArticleExampleCard",
     "ArticleCallout",
-    "ArticleChecklist",
     "ArticleQuote",
     "ArticleTable",
   ]) {
@@ -340,9 +345,76 @@ test("delegates reusable article blocks without changing Figma class contracts",
 
   assert.match(articleBlocksSource, /className="article-example-card"/);
   assert.match(articleBlocksSource, /className=\{`article-callout article-callout-\$\{block\.variant\}`\}/);
-  assert.match(articleBlocksSource, /className="article-checklist"/);
+  assert.match(articleBlocksSource, /export \{ ArticleChecklist \} from "\.\/ArticleChecklist"/);
+  assert.match(articleChecklistSource, /export function ArticleChecklist/);
+  assert.doesNotMatch(articleBlocksSource, /function ArticleChecklist/);
+  assert.match(articleChecklistSource, /className="article-checklist"/);
   assert.match(articleBlocksSource, /className="article-quote"/);
   assert.match(articleBlocksSource, /className="article-table"/);
+});
+
+test("styles checklist interaction, completion, focus, and narrow wrapping", () => {
+  const headerRule = cssRuleBody(".article-checklist-header");
+  const iconRule = cssRuleBody(".article-checklist-icon");
+  const checkedIconRule = cssRuleBody(
+    ".article-checklist-item:has(input:checked) .article-checklist-icon",
+  );
+  const focusRule = cssRuleBody(
+    ".article-checklist-input:focus-visible + .article-checklist-icon",
+  );
+  const checkedTextRule = cssRuleBody(
+    '.article-checklist-item[data-checked="true"] .article-checklist-text',
+  );
+  const resetRule = cssRuleBody(".article-checklist-reset");
+
+  assert.match(headerRule, /display: flex;/);
+  assert.match(headerRule, /flex-wrap: wrap;/);
+  assert.match(iconRule, /border: 1px solid var\(--line-strong\);/);
+  assert.match(iconRule, /background: var\(--surface\);/);
+  assert.match(checkedIconRule, /background: var\(--accent\);/);
+  assert.match(checkedIconRule, /color: var\(--figma-color-text-white\);/);
+  assert.match(focusRule, /outline: 2px solid var\(--accent\);/);
+  assert.match(checkedTextRule, /color: var\(--muted\);/);
+  assert.doesNotMatch(checkedTextRule, /opacity:/);
+  assert.match(resetRule, /min-height: 36px;/);
+  assert.match(cssSource, /\.article-checklist-reset:hover/);
+  assert.match(cssSource, /\.article-checklist-reset:focus-visible/);
+});
+
+test("renders persistent native article checklists with localized status and reset", () => {
+  assert.match(articleChecklistSource, /^"use client";/);
+  assert.match(articleChecklistSource, /useState\(\(\) => new Set<number>\(\)\)/);
+  assert.match(articleChecklistSource, /queueMicrotask\(\(\) =>/);
+  assert.match(articleChecklistSource, /return \(\) => \{[\s\S]*?active = false;/);
+  assert.match(articleChecklistSource, /readChecklistState\(window\.localStorage, storageKey, items\.length\)/);
+  assert.match(articleChecklistSource, /writeChecklistState\(window\.localStorage, storageKey, next\)/);
+  assert.match(articleChecklistSource, /toggleChecklistIndex\(checked, index, items\.length\)/);
+  assert.match(articleChecklistSource, /<label[^>]*className="article-checklist-item"/s);
+  assert.match(articleChecklistSource, /<input[\s\S]*?checked=\{checked\.has\(index\)\}[\s\S]*?type="checkbox"/);
+  assert.doesNotMatch(articleChecklistSource, /\bdisabled\b/);
+  assert.match(articleChecklistSource, /aria-live="polite"/);
+  assert.match(articleChecklistSource, /labels\.progress\(checked\.size, items\.length\)/);
+  assert.match(articleChecklistSource, /checked\.size === items\.length && items\.length > 0/);
+  assert.match(articleChecklistSource, /<>\s*\{" "\}\s*<span className="article-checklist-complete">/);
+  assert.match(articleChecklistSource, /\{labels\.complete\}/);
+  assert.match(articleChecklistSource, /checked\.size > 0/);
+  assert.match(articleChecklistSource, /onClick=\{handleReset\}/);
+  assert.match(articleChecklistSource, /\{labels\.reset\}/);
+});
+
+test("uses stable recursive checklist keys without duplicating the chapter heading", () => {
+  assert.match(guideShellSource, /<ArticleContent chapter=\{chapter\} locale=\{locale\} \/>/);
+  assert.match(articleSource, /export function ArticleContent\(\{[\s\S]*?chapter,[\s\S]*?locale,[\s\S]*?\}:/);
+  assert.match(articleSource, /const checklistLabels = getGuideCopy\(locale\)\.checklist/);
+  assert.match(articleSource, /locale=\{locale\}/);
+  assert.match(articleSource, /chapterSlug=\{chapter\.slug\}/);
+  assert.match(articleSource, /checklistLabels=\{checklistLabels\}/);
+  assert.match(articleSource, /getChecklistStorageKey\(locale, chapterSlug, blockId\)/);
+  assert.match(articleSource, /title=\{block\.type === "checklist" \? block\.title : undefined\}/);
+  assert.doesNotMatch(articleSource, /checklistTitle/);
+  assert.doesNotMatch(articleComponentSource, /accentItemIndex|checklistAccentItemIndex|data-accent/);
+  assert.match(articleSource, /<h1 className="type-h1">\{chapter\.title\}<\/h1>/);
+  assert.match(articleSource, /const Heading = section\.headingLevel === 3 \? "h3" : "h2"/);
 });
 
 test("uses positional keys for repeated structured table values", () => {
@@ -412,7 +484,8 @@ test("renders Notion bullet groups as semantic unordered lists", () => {
 });
 
 test("localizes callout badges and keeps Help Center as a real link", () => {
-  assert.match(articleSource, /const calloutBadgeLabel = isEnglish \? "Tip" : "Совет";/);
+  assert.match(articleSource, /const calloutBadgeLabel = locale === "en" \? "Tip" : "Совет";/);
+  assert.doesNotMatch(articleSource, /chapter\.updatedAt\?\.startsWith\("Updated"\)/);
   assert.match(articleSource, /calloutBadgeLabel=\{calloutBadgeLabel\}/);
   assert.doesNotMatch(articleSource, /Pro-tip/);
   assert.match(articleSource, /<a\s+className="article-update-help-link"/);

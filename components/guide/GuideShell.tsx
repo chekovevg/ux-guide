@@ -237,7 +237,7 @@ export function GuideShell({
 
           <article className="guide-article-area">
             <div className="guide-article w-full">
-              <ArticleContent chapter={chapter} />
+              <ArticleContent chapter={chapter} locale={locale} />
               <ArticleChapterNavigation
                 basePath={chapterBasePath}
                 next={chapterNavigation.next}

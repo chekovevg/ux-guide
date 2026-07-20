@@ -1,6 +1,8 @@
 import Image from "next/image";
-import { Check, Link as LucideLink } from "lucide-react";
+import { Link as LucideLink } from "lucide-react";
 import type { ContentBlock } from "./types";
+
+export { ArticleChecklist } from "./ArticleChecklist";
 
 export function ArticleExampleCard({
   block,
@@ -71,37 +73,6 @@ export function ArticleCallout({
         <LucideLink aria-hidden="true" className="size-3.5" />
       </a>
     </aside>
-  );
-}
-
-export function ArticleChecklist({
-  title,
-  items,
-  accentItemIndex,
-}: {
-  title?: string;
-  items: string[];
-  accentItemIndex?: number;
-}) {
-  return (
-    <div className="article-checklist">
-      {title ? <h3 className="article-checklist-title">{title}</h3> : null}
-      <ul className="article-checklist-list">
-        {items.map((item, index) => (
-          <li key={item} className="article-checklist-item">
-            <span className="article-checklist-icon" aria-hidden="true">
-              <Check className="size-3" strokeWidth={3} />
-            </span>
-            <span
-              className="article-checklist-text"
-              data-accent={index === accentItemIndex ? "true" : undefined}
-            >
-              {item}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }
 

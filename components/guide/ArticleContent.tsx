@@ -8,15 +8,25 @@ import {
   ArticleQuote,
   ArticleTable,
 } from "./ArticleBlocks";
+import { getChecklistStorageKey } from "./checklistState.mjs";
+import { getGuideCopy, type GuideCopyLocale } from "./guideCopy";
 import type { ContentBlock, GuideChapter, GuideSection } from "./types";
 
 const mobileCoverSources: Record<string, string> = {
   "/figma/cover-resistance.svg": "/figma/cover-resistance-mobile.png",
 };
 
-export function ArticleContent({ chapter }: { chapter: GuideChapter }) {
-  const isEnglish = chapter.updatedAt?.startsWith("Updated") ?? false;
-  const calloutBadgeLabel = isEnglish ? "Tip" : "Совет";
+type ChecklistLabels = ReturnType<typeof getGuideCopy>["checklist"];
+
+export function ArticleContent({
+  chapter,
+  locale,
+}: {
+  chapter: GuideChapter;
+  locale: GuideCopyLocale;
+}) {
+  const calloutBadgeLabel = locale === "en" ? "Tip" : "Совет";
+  const checklistLabels = getGuideCopy(locale).checklist;
 
   return (
     <>
@@ -29,8 +39,9 @@ export function ArticleContent({ chapter }: { chapter: GuideChapter }) {
               block={block}
               blockId={`${chapter.slug}-block-${index + 1}`}
               calloutBadgeLabel={calloutBadgeLabel}
-              checklistTitle={block.type === "todoList" ? chapter.title : undefined}
-              checklistAccentItemIndex={block.type === "todoList" ? 4 : undefined}
+              chapterSlug={chapter.slug}
+              checklistLabels={checklistLabels}
+              locale={locale}
             />
           ))}
         </div>
@@ -39,11 +50,14 @@ export function ArticleContent({ chapter }: { chapter: GuideChapter }) {
         <GuideSectionView
           key={section.id}
           calloutBadgeLabel={calloutBadgeLabel}
+          chapterSlug={chapter.slug}
+          checklistLabels={checklistLabels}
+          locale={locale}
           section={section}
         />
       ))}
       {chapter.updatedAt ? (
-        <ArticleUpdateStatus updatedAt={chapter.updatedAt} />
+        <ArticleUpdateStatus locale={locale} updatedAt={chapter.updatedAt} />
       ) : null}
     </>
   );
@@ -89,10 +103,16 @@ function Hero({ chapter }: { chapter: GuideChapter }) {
 
 function GuideSectionView({
   calloutBadgeLabel,
+  chapterSlug,
+  checklistLabels,
+  locale,
   section,
   depth = 0,
 }: {
   calloutBadgeLabel: string;
+  chapterSlug: string;
+  checklistLabels: ChecklistLabels;
+  locale: GuideCopyLocale;
   section: GuideSection;
   depth?: number;
 }) {
@@ -135,6 +155,9 @@ function GuideSectionView({
               block={block}
               blockId={`${section.id}-block-${index + 1}`}
               calloutBadgeLabel={calloutBadgeLabel}
+              chapterSlug={chapterSlug}
+              checklistLabels={checklistLabels}
+              locale={locale}
             />
           ))}
         </div>
@@ -145,6 +168,9 @@ function GuideSectionView({
             <GuideSectionView
               key={child.id}
               calloutBadgeLabel={calloutBadgeLabel}
+              chapterSlug={chapterSlug}
+              checklistLabels={checklistLabels}
+              locale={locale}
               section={child}
               depth={depth + 1}
             />
@@ -159,14 +185,16 @@ function ContentBlockView({
   block,
   blockId,
   calloutBadgeLabel,
-  checklistTitle,
-  checklistAccentItemIndex,
+  chapterSlug,
+  checklistLabels,
+  locale,
 }: {
   block: ContentBlock;
   blockId: string;
   calloutBadgeLabel: string;
-  checklistTitle?: string;
-  checklistAccentItemIndex?: number;
+  chapterSlug: string;
+  checklistLabels: ChecklistLabels;
+  locale: GuideCopyLocale;
 }) {
   switch (block.type) {
     case "lead":
@@ -209,11 +237,13 @@ function ContentBlockView({
         </ol>
       );
     case "todoList":
+    case "checklist":
       return (
         <ArticleChecklist
-          title={checklistTitle}
           items={block.items}
-          accentItemIndex={checklistAccentItemIndex}
+          labels={checklistLabels}
+          storageKey={getChecklistStorageKey(locale, chapterSlug, blockId)}
+          title={block.type === "checklist" ? block.title : undefined}
         />
       );
     case "image":
@@ -251,6 +281,9 @@ function ContentBlockView({
                     block={childBlock}
                     blockId={childBlockId}
                     calloutBadgeLabel={calloutBadgeLabel}
+                    chapterSlug={chapterSlug}
+                    checklistLabels={checklistLabels}
+                    locale={locale}
                   />
                 );
               })}
@@ -281,10 +314,6 @@ function ContentBlockView({
             ))}
           </ol>
         </div>
-      );
-    case "checklist":
-      return (
-        <ArticleChecklist title={block.title} items={block.items} />
       );
     case "quote":
       return (
@@ -369,8 +398,14 @@ function HeadingLinkIcon() {
   );
 }
 
-function ArticleUpdateStatus({ updatedAt }: { updatedAt: string }) {
-  const isEnglish = updatedAt.startsWith("Updated");
+function ArticleUpdateStatus({
+  locale,
+  updatedAt,
+}: {
+  locale: GuideCopyLocale;
+  updatedAt: string;
+}) {
+  const isEnglish = locale === "en";
   const helpHref = "https://pathway.zendesk.com/hc/en-us";
   const helpText = isEnglish
     ? "Have questions about the platform?"
