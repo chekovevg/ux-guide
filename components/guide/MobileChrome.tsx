@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import type * as React from "react";
 import { Search, X } from "lucide-react";
 import { getMobileContentsItems } from "./mobileContents.mjs";
 import {
@@ -13,6 +14,7 @@ import type {
   GuideSearchItem,
   GuideThemeMode,
 } from "./types";
+import { useModalDialog } from "./useModalDialog";
 
 type PageTocLink = {
   depth?: number;
@@ -133,6 +135,7 @@ export function MobileSearchPanel({
 }
 
 export function MobileSiteMenu({
+  backgroundRef,
   basePath = "/guide",
   languageLinks,
   navigationGroups,
@@ -141,6 +144,7 @@ export function MobileSiteMenu({
   onClose,
   onThemeChange,
 }: {
+  backgroundRef: React.RefObject<HTMLElement | null>;
   basePath?: string;
   languageLinks: GuideLanguageLink[];
   navigationGroups: GuideNavigationGroup[];
@@ -149,10 +153,22 @@ export function MobileSiteMenu({
   onClose: () => void;
   onThemeChange: (themeMode: GuideThemeMode) => void;
 }) {
+  const dialogRef = useRef<HTMLElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const menuTitle = "Guide chapters";
+  const closeLabel = "Close navigation";
   const navigationItems = getMobileContentsItems(
     navigationGroups.flatMap((group) => group.items),
     basePath,
   );
+
+  useModalDialog({
+    open,
+    onClose,
+    dialogRef,
+    initialFocusRef: closeButtonRef,
+    backgroundRef,
+  });
 
   if (!open) {
     return null;
@@ -163,9 +179,22 @@ export function MobileSiteMenu({
       aria-label="Guide navigation"
       aria-modal="true"
       className="mobile-site-menu"
+      ref={dialogRef}
       role="dialog"
     >
       <div className="mobile-site-menu-content">
+        <div className="mobile-site-menu-header">
+          <p className="mobile-site-menu-title">{menuTitle}</p>
+          <button
+            ref={closeButtonRef}
+            className="mobile-site-menu-close"
+            type="button"
+            onClick={onClose}
+          >
+            <span className="sr-only">{closeLabel}</span>
+            <X aria-hidden="true" className="size-5" />
+          </button>
+        </div>
         <nav aria-label="Guide chapters" className="mobile-guide-nav">
           <ol className="mobile-guide-list">
             {navigationItems.map((item) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import { ArticleContent } from "./ArticleContent";
 import { GuideHeader } from "./GuideHeader";
@@ -36,6 +36,7 @@ export function GuideShell({
   navigation,
   navigationGroups,
 }: GuideShellProps) {
+  const appContentRef = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState(chapter.sections[0]?.id ?? "");
   const [menuOpen, setMenuOpen] = useState(false);
   const [contentsOpen, setContentsOpen] = useState(false);
@@ -133,21 +134,19 @@ export function GuideShell({
   }, [sectionLinks]);
 
   useEffect(() => {
-    if (!menuOpen && !contentsOpen && !searchOpen) {
+    if (!contentsOpen) {
       return;
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setMenuOpen(false);
         setContentsOpen(false);
-        setSearchOpen(false);
       }
     };
 
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [menuOpen, contentsOpen, searchOpen]);
+  }, [contentsOpen]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -181,27 +180,89 @@ export function GuideShell({
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-      <GuideHeader
-        contentsOpen={contentsOpen}
-        currentTitle={activeSectionTitle}
-        menuOpen={menuOpen}
-        searchOpen={searchOpen}
-        onContents={() => {
-          setMenuOpen(false);
-          setSearchOpen(false);
-          setContentsOpen((value) => !value);
-        }}
-        onMenu={() => {
-          setContentsOpen(false);
-          setSearchOpen(false);
-          setMenuOpen((value) => !value);
-        }}
-        onSearch={() => {
-          setContentsOpen(false);
-          setMenuOpen(false);
-          setSearchOpen((value) => !value);
-        }}
-      />
+      <div ref={appContentRef} className="guide-app-content">
+        <GuideHeader
+          contentsOpen={contentsOpen}
+          currentTitle={activeSectionTitle}
+          menuOpen={menuOpen}
+          searchOpen={searchOpen}
+          onContents={() => {
+            setMenuOpen(false);
+            setSearchOpen(false);
+            setContentsOpen((value) => !value);
+          }}
+          onMenu={() => {
+            setContentsOpen(false);
+            setSearchOpen(false);
+            setMenuOpen((value) => !value);
+          }}
+          onSearch={() => {
+            setContentsOpen(false);
+            setMenuOpen(false);
+            setSearchOpen((value) => !value);
+          }}
+        />
+
+        <main
+          className="guide-shell guide-grid relative"
+          data-sidebar-collapsed={sidebarCollapsed ? "true" : undefined}
+        >
+          <aside
+            className="guide-sidebar-shell"
+            data-collapsed={sidebarCollapsed ? "true" : undefined}
+          >
+            <GuideNavigation
+              basePath={chapterBasePath}
+              languageLinks={languageLinks}
+              navigationGroups={groupedNavigation}
+              sidebarCollapsed={sidebarCollapsed}
+              themeMode={themeMode}
+              onSearch={() => setSearchOpen(true)}
+              onThemeChange={setThemeMode}
+              onToggleSidebar={() => setSidebarCollapsed((value) => !value)}
+            />
+          </aside>
+
+          <PageTocDropdown
+            activeId={activeId}
+            activeTitle={activeSectionTitle}
+            links={sectionLinks}
+            open={contentsOpen}
+            progress={tocProgress}
+            title={pageTocTitle}
+            onNavigate={() => setContentsOpen(false)}
+            onToggle={() => {
+              setMenuOpen(false);
+              setSearchOpen(false);
+              setContentsOpen((value) => !value);
+            }}
+          />
+
+          <article className="guide-article-area">
+            <div className="guide-article w-full">
+              <ArticleContent chapter={chapter} />
+              <ArticleChapterNavigation
+                basePath={chapterBasePath}
+                next={chapterNavigation.next}
+                previous={chapterNavigation.previous}
+              />
+            </div>
+          </article>
+
+          <aside className="guide-page-toc-shell">
+            <PageToc links={sectionLinks} activeId={activeId} title={pageTocTitle} />
+          </aside>
+        </main>
+
+        <MobileContentsSection
+          activeId={activeId}
+          label={pageTocTitle}
+          links={sectionLinks}
+          open={contentsOpen}
+          onNavigate={() => setContentsOpen(false)}
+        />
+      </div>
+
       {searchOpen ? (
         <GuideSearchPanel
           items={searchItems}
@@ -210,66 +271,8 @@ export function GuideShell({
         />
       ) : null}
 
-      <main
-        className="guide-shell guide-grid relative"
-        data-sidebar-collapsed={sidebarCollapsed ? "true" : undefined}
-      >
-        <aside
-          className="guide-sidebar-shell"
-          data-collapsed={sidebarCollapsed ? "true" : undefined}
-        >
-          <GuideNavigation
-            basePath={chapterBasePath}
-            languageLinks={languageLinks}
-            navigationGroups={groupedNavigation}
-            sidebarCollapsed={sidebarCollapsed}
-            themeMode={themeMode}
-            onSearch={() => setSearchOpen(true)}
-            onThemeChange={setThemeMode}
-            onToggleSidebar={() => setSidebarCollapsed((value) => !value)}
-          />
-        </aside>
-
-        <PageTocDropdown
-          activeId={activeId}
-          activeTitle={activeSectionTitle}
-          links={sectionLinks}
-          open={contentsOpen}
-          progress={tocProgress}
-          title={pageTocTitle}
-          onNavigate={() => setContentsOpen(false)}
-          onToggle={() => {
-            setMenuOpen(false);
-            setSearchOpen(false);
-            setContentsOpen((value) => !value);
-          }}
-        />
-
-        <article className="guide-article-area">
-          <div className="guide-article w-full">
-            <ArticleContent chapter={chapter} />
-            <ArticleChapterNavigation
-              basePath={chapterBasePath}
-              next={chapterNavigation.next}
-              previous={chapterNavigation.previous}
-            />
-          </div>
-        </article>
-
-        <aside className="guide-page-toc-shell">
-          <PageToc links={sectionLinks} activeId={activeId} title={pageTocTitle} />
-        </aside>
-      </main>
-
-      <MobileContentsSection
-        activeId={activeId}
-        label={pageTocTitle}
-        links={sectionLinks}
-        open={contentsOpen}
-        onNavigate={() => setContentsOpen(false)}
-      />
-
       <MobileSiteMenu
+        backgroundRef={appContentRef}
         basePath={chapterBasePath}
         languageLinks={languageLinks}
         navigationGroups={groupedNavigation}

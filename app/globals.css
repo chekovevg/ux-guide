@@ -1065,7 +1065,7 @@ input {
     display: flex;
     min-height: 100%;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     padding: 16px 18px;
   }
 
@@ -2114,8 +2114,39 @@ input {
     display: flex;
     min-height: 100%;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
     padding: 16px 18px;
+  }
+
+  .mobile-site-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .mobile-site-menu-title {
+    color: var(--foreground);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+  }
+
+  .mobile-site-menu-close {
+    display: inline-grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border-radius: 8px;
+    color: var(--muted);
+  }
+
+  .mobile-site-menu-close:hover,
+  .mobile-site-menu-close:focus-visible {
+    background: var(--surface-soft);
+    color: var(--foreground);
   }
 
   .mobile-guide-nav {
@@ -2163,6 +2194,7 @@ input {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    margin-top: auto;
     border-top: var(--figma-stroke-0-8) solid var(--line);
     padding-top: 14px;
   }
