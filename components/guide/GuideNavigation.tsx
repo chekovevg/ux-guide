@@ -48,6 +48,7 @@ export function GuideNavigation({
         <button
           className="guide-sidebar-icon-button"
           aria-label="Expand sidebar"
+          data-guide-menu-return-focus=""
           type="button"
           onClick={onToggleSidebar}
         >

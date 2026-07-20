@@ -326,6 +326,30 @@ async function verifySearchAndMobileChrome(page, locale) {
     desktopMenuFocusTarget,
     `${locale} desktop menu focus fallback`,
   );
+
+  await page.getByRole("button", { name: "Collapse sidebar" }).click();
+  const collapsedMenuFocusTarget = page.locator(
+    '.guide-sidebar-collapsed-rail button[aria-label="Expand sidebar"][data-guide-menu-return-focus]',
+  );
+  await collapsedMenuFocusTarget.waitFor({ state: "visible" });
+  await setViewport(page, 390);
+  await menuTrigger.click();
+  await menuDialog.waitFor({ state: "visible" });
+  await setViewport(page, 1440);
+  await menuDialog.waitFor({ state: "detached" });
+  assert.equal(
+    await page.locator(".guide-app-content").evaluate((element) =>
+      element.hasAttribute("inert"),
+    ),
+    false,
+    `${locale}: collapsed breakpoint close left the background inert`,
+  );
+  await collapsedMenuFocusTarget.waitFor({ state: "visible" });
+  await waitForFocused(
+    page,
+    collapsedMenuFocusTarget,
+    `${locale} collapsed sidebar menu focus fallback`,
+  );
   await assertNoPageOverflow(page, `${locale} mobile chrome`);
 }
 

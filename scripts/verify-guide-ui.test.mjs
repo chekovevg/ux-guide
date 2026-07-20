@@ -148,6 +148,16 @@ test("proves breakpoint menu close returns focus to active desktop navigation", 
   assert.match(runtimeSource, /desktop menu focus fallback/);
 });
 
+test("proves breakpoint menu close returns focus to the collapsed sidebar rail", () => {
+  assert.match(runtimeSource, /getByRole\("button", \{ name: "Collapse sidebar" \}\)/);
+  assert.match(
+    runtimeSource,
+    /\.guide-sidebar-collapsed-rail[\s\S]*aria-label="Expand sidebar"[\s\S]*data-guide-menu-return-focus/,
+  );
+  assert.match(runtimeSource, /collapsed breakpoint close left the background inert/);
+  assert.match(runtimeSource, /collapsed sidebar menu focus fallback/);
+});
+
 test("enforces RU and EN intro HTML byte budgets without off-page content", () => {
   assert.match(runtimeSource, /const introSlug = "intro"/);
   assert.match(runtimeSource, /async function verifyProductionRouteBudgets/);

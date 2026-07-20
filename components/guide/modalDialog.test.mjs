@@ -155,6 +155,23 @@ test("falls mobile-menu focus back to the visible active desktop chapter", () =>
   );
 });
 
+test("falls mobile-menu focus back to the collapsed sidebar expand control", () => {
+  const collapsedBranchStart = navigationSource.indexOf("if (sidebarCollapsed)");
+  const expandedBranchStart = navigationSource.indexOf(
+    "const navigationItems",
+    collapsedBranchStart,
+  );
+  const collapsedBranch = navigationSource.slice(
+    collapsedBranchStart,
+    expandedBranchStart,
+  );
+
+  assert.match(
+    collapsedBranch,
+    /aria-label="Expand sidebar"[\s\S]*?data-guide-menu-return-focus=""/,
+  );
+});
+
 test("keeps chapter navigation below the header and the footer at the bottom", () => {
   const menuContentBlocks = cssSource.match(/\.mobile-site-menu-content\s*\{[^}]*}/g) ?? [];
   const menuFooterBlocks = cssSource.match(/\.mobile-site-footer\s*\{[^}]*}/g) ?? [];
