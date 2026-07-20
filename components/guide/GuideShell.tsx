@@ -98,6 +98,21 @@ export function GuideShell({
   }, []);
 
   useEffect(() => {
+    if (sectionLinks.length > 0 || !contentsOpen) return;
+
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) return;
+      setContentsOpen(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [contentsOpen, sectionLinks.length]);
+
+  useEffect(() => {
     const nodes = sectionLinks
       .map((item) => document.getElementById(item.id))
       .filter((node): node is HTMLElement => node !== null);

@@ -85,6 +85,7 @@
   --quote-bg: #1d242d;
   --logo-filter: invert(1) brightness(1.12);
   --toc-active: var(--figma-color-accent-500);
+  --accent: var(--figma-color-accent-500);
   --accent-soft: rgba(57, 117, 255, 0.18);
   --article-text: #d3d8de;
   --article-callout-text: #c5ccd4;

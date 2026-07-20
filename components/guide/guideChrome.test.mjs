@@ -139,6 +139,13 @@ test("does not expose or open empty mobile contents", () => {
   );
 });
 
+test("clears an open contents disclosure when a mounted chapter loses its links", () => {
+  assert.match(
+    shellSource,
+    /useEffect\(\(\) => \{\s*if \(sectionLinks\.length > 0 \|\| !contentsOpen\) return;[\s\S]*?let active = true;[\s\S]*?queueMicrotask\(\(\) => \{\s*if \(!active\) return;\s*setContentsOpen\(false\);[\s\S]*?return \(\) => \{\s*active = false;[\s\S]*?\}, \[contentsOpen, sectionLinks\.length\]\)/,
+  );
+});
+
 test("hydrates with light theme before applying the stored preference after mount", () => {
   assert.match(shellSource, /useState<GuideThemeMode>\("light"\)/);
   assert.doesNotMatch(shellSource, /useState<GuideThemeMode>\(\(\) =>/);

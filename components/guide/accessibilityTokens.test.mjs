@@ -16,19 +16,34 @@ function readRootVariables(source) {
   );
 }
 
+function readDarkVariables(source) {
+  const root = source.match(/:root\[data-theme="dark"\]\s*\{([\s\S]*?)\}/)?.[1] ?? "";
+
+  return new Map(
+    [...root.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((match) => [
+      match[1],
+      match[2].trim(),
+    ]),
+  );
+}
+
 const variables = new Map([
   ...readRootVariables(tokenSource),
   ...readRootVariables(cssSource),
 ]);
+const darkVariables = new Map([
+  ...variables,
+  ...readDarkVariables(cssSource),
+]);
 
-function resolveColor(name, seen = new Set()) {
+function resolveColor(name, sourceVariables = variables, seen = new Set()) {
   assert(!seen.has(name), `Circular CSS variable reference: ${name}`);
-  const value = variables.get(name);
+  const value = sourceVariables.get(name);
   assert(value, `Missing CSS variable: ${name}`);
 
   const reference = value.match(/^var\((--[\w-]+)\)$/)?.[1];
   return reference
-    ? resolveColor(reference, new Set([...seen, name]))
+    ? resolveColor(reference, sourceVariables, new Set([...seen, name]))
     : value.toUpperCase();
 }
 
@@ -63,4 +78,15 @@ test("light navigation and accent text meet WCAG AA contrast against white", () 
       `${use} resolves to ${color} below 4.5:1 against ${white}`,
     );
   }
+});
+
+test("dark accent preserves its prior token and WCAG AA contrast", () => {
+  const accent = resolveColor("--accent", darkVariables);
+  const background = resolveColor("--background", darkVariables);
+
+  assert.equal(accent, "#267AEE");
+  assert.ok(
+    contrastRatio(accent, background) >= 4.5,
+    `dark --accent resolves to ${accent} below 4.5:1 against ${background}`,
+  );
 });
