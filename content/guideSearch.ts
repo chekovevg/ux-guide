@@ -52,9 +52,12 @@ function getBlockFragments(blocks: ContentBlock[] = []): string[] {
         break;
       case "callout":
         add(block.title);
-        add(block.text);
-        block.paragraphs?.forEach(add);
-        block.items?.forEach(add);
+        if (block.paragraphs?.length || block.items?.length) {
+          block.paragraphs?.forEach(add);
+          block.items?.forEach(add);
+        } else {
+          add(block.text);
+        }
         add(block.linkLabel);
         break;
       case "bulletedList":
