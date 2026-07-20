@@ -106,6 +106,30 @@ test("opens desktop search as a compact reference-style command input", () => {
   assert.match(cssSource, /\.search-dialog-input\s*\{[\s\S]*?font-size: 18px;/);
 });
 
+test("keeps search focus visible on the shared control in every theme", () => {
+  assert.match(
+    cssSource,
+    /\.search-dialog-control:focus-within\s*\{[\s\S]*?outline: 2px solid var\(--focus\);/,
+  );
+  assert.match(cssSource, /--focus: var\(--figma-color-accent-500\);/);
+  assert.doesNotMatch(
+    cssSource,
+    /\.search-dialog-input:focus(?:-visible)?\s*\{[^}]*var\(--focus\)/s,
+  );
+});
+
+test("shares one return-focus selector between the mobile menu trigger and active desktop link", () => {
+  assert.match(headerSource, /data-guide-menu-return-focus=""/);
+  assert.match(
+    navigationSource,
+    /data-guide-menu-return-focus=\{item\.active \? "" : undefined\}/,
+  );
+  assert.match(
+    mobileSource,
+    /returnFocusSelector: "\[data-guide-menu-return-focus\]"/,
+  );
+});
+
 test("keeps desktop header free of the removed global search control", () => {
   assert.doesNotMatch(headerSource, /guide-header-search-area/);
   assert.doesNotMatch(headerSource, /header-search/);

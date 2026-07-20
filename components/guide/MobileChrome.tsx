@@ -103,6 +103,7 @@ export function MobileSiteMenu({
     dialogRef,
     initialFocusRef: closeButtonRef,
     backgroundRef,
+    returnFocusSelector: "[data-guide-menu-return-focus]",
   });
 
   if (!open) {

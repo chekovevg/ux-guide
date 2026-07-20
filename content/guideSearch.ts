@@ -272,7 +272,15 @@ export function searchGuideIndex(
   }
 
   const ranked = records
-    .map((record) => ({ record, rank: rank(record.title, record.searchText, query, record.locale) }))
+    .map((record) => ({
+      record,
+      rank: rank(
+        record.type === "text" ? record.searchText : record.title,
+        record.searchText,
+        query,
+        record.locale,
+      ),
+    }))
     .filter((match): match is { record: GuideSearchRecord; rank: number } => match.rank !== null)
     .sort((left, right) => left.rank - right.rank || left.record.sourceOrder - right.record.sourceOrder);
 

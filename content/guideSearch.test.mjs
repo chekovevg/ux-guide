@@ -161,6 +161,47 @@ test("ranks exact, prefix, substring, then body matches", () => {
   );
 });
 
+test("keeps heading-only queries out of unrelated text fragments", () => {
+  const query = "Matching section heading";
+  const index = buildIndex([
+    {
+      slug: "heading-match",
+      title: "A different chapter title",
+      sections: [
+        {
+          id: "matching-heading",
+          title: query,
+          blocks: [
+            { type: "paragraph", text: "An unrelated first fragment." },
+            { type: "paragraph", text: "Another unrelated fragment." },
+            {
+              type: "paragraph",
+              text: "A genuine matching section heading body match.",
+            },
+          ],
+        },
+      ],
+    },
+  ]);
+  const results = search.searchGuideIndex(index, query);
+  const normalize = (value) =>
+    value.normalize("NFKC").toLocaleLowerCase("en").replace(/\s+/g, " ").trim();
+  const normalizedQuery = normalize(query);
+
+  assert.equal(results.sections[0].sectionId, "matching-heading");
+  assert.deepEqual(
+    results.text.map((item) => item.excerptSource),
+    ["A genuine matching section heading body match."],
+  );
+  assert.ok(
+    results.text.every(
+      (item) =>
+        normalize(item.searchText).includes(normalizedQuery) &&
+        normalize(item.excerpt).includes(normalizedQuery),
+    ),
+  );
+});
+
 test("matches Cyrillic case-insensitively", () => {
   const index = buildIndex(
     [

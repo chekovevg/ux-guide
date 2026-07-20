@@ -14,6 +14,7 @@ const baseUrl = (process.env.GUIDE_BASE_URL ?? "http://127.0.0.1:3000").replace(
 );
 const screenshotRoot = resolve(".codex-screenshots", "task-8");
 const visualWidths = [320, 390, 1024, 1440];
+const introSlug = "intro";
 const resistanceSlug =
   "soprotivlenie-issledovaniyam-i-kak-s-etim-rabotat";
 const checklistSlug = "chek-list-o-chem-esche-podumat-pered-zapuskom";
@@ -31,6 +32,26 @@ function guidePath(locale) {
 
 function guideUrl(locale, slug) {
   return `${baseUrl}${guidePath(locale)}/${slug}`;
+}
+
+async function verifyProductionRouteBudgets() {
+  for (const locale of ["ru", "en"]) {
+    const url = guideUrl(locale, introSlug);
+    const response = await fetch(url);
+    assert.ok(response.ok, `Expected ${url} to load, got ${response.status}`);
+    const html = await response.text();
+    const htmlBytes = Buffer.byteLength(html, "utf8");
+
+    assert.ok(
+      htmlBytes < 500_000,
+      `${locale}: intro HTML is ${htmlBytes} bytes`,
+    );
+    assert.ok(
+      !html.includes("Sun Microsystems"),
+      `${locale}: intro HTML embeds off-page search content`,
+    );
+    console.log(`ROUTE_BUDGET ${locale.toUpperCase()}: ${htmlBytes} bytes`);
+  }
 }
 
 async function openGuidePage(page, url) {
@@ -67,6 +88,32 @@ async function waitForFocused(page, locator, context) {
   );
 }
 
+async function assertSearchControlFocusIndicator(searchbox, context) {
+  const indicator = await searchbox.evaluate((input) => {
+    const control = input.closest(".search-dialog-control");
+
+    if (!(control instanceof HTMLElement)) {
+      throw new Error("Search input has no control wrapper");
+    }
+
+    const style = getComputedStyle(control);
+    return {
+      outlineStyle: style.outlineStyle,
+      outlineWidth: style.outlineWidth,
+    };
+  });
+
+  assert.notEqual(
+    indicator.outlineStyle,
+    "none",
+    `${context}: search control focus indicator is not visible`,
+  );
+  assert.ok(
+    Number.parseFloat(indicator.outlineWidth) >= 2,
+    `${context}: search control focus indicator is ${indicator.outlineWidth}`,
+  );
+}
+
 async function visibleSearchTrigger(page) {
   const sidebarTrigger = page.locator(".sidebar-search");
 
@@ -88,6 +135,10 @@ async function openSearch(page) {
   const searchbox = dialog.getByRole("searchbox");
   await dialog.waitFor({ state: "visible" });
   await waitForFocused(page, searchbox, "search dialog");
+  await assertSearchControlFocusIndicator(searchbox, "search dialog");
+  await dialog
+    .locator('section[aria-labelledby="search-dialog-group-suggested"]')
+    .waitFor({ state: "visible" });
   return { dialog, searchbox, trigger };
 }
 
@@ -253,6 +304,28 @@ async function verifySearchAndMobileChrome(page, locale) {
   );
   await page.keyboard.press("Escape");
   await menuDialog.waitFor({ state: "detached" });
+  await waitForFocused(page, menuTrigger, `${locale} mobile menu focus restore`);
+
+  await menuTrigger.click();
+  await menuDialog.waitFor({ state: "visible" });
+  await setViewport(page, 1440);
+  await menuDialog.waitFor({ state: "detached" });
+  assert.equal(
+    await page.locator(".guide-app-content").evaluate((element) =>
+      element.hasAttribute("inert"),
+    ),
+    false,
+    `${locale}: breakpoint close left the background inert`,
+  );
+  const desktopMenuFocusTarget = page.locator(
+    '.guide-nav-link[data-active="true"][data-guide-menu-return-focus]',
+  );
+  await desktopMenuFocusTarget.waitFor({ state: "visible" });
+  await waitForFocused(
+    page,
+    desktopMenuFocusTarget,
+    `${locale} desktop menu focus fallback`,
+  );
   await assertNoPageOverflow(page, `${locale} mobile chrome`);
 }
 
@@ -338,6 +411,35 @@ async function verifyChecklist(page, locale) {
     await page.evaluate((key) => localStorage.getItem(key), storageKey),
     null,
     `${locale}: reset left the persisted storage key`,
+  );
+
+  await reloadedChecklist.locator(".article-checklist-item").first().click();
+  const keyboardReset = reloadedChecklist.locator(".article-checklist-reset");
+  await keyboardReset.waitFor({ state: "visible" });
+  await keyboardReset.focus();
+  await waitForFocused(
+    page,
+    keyboardReset,
+    `${locale} keyboard checklist reset`,
+  );
+  await page.keyboard.press("Enter");
+  await keyboardReset.waitFor({ state: "detached" });
+  await waitForFocused(
+    page,
+    reloadedCheckboxes.first(),
+    `${locale} first checkbox after reset`,
+  );
+  assert.equal(
+    await reloadedCheckboxes.evaluateAll((inputs) =>
+      inputs.filter((input) => input.checked).length,
+    ),
+    0,
+    `${locale}: keyboard reset left checked items`,
+  );
+  assert.equal(
+    await page.evaluate((key) => localStorage.getItem(key), storageKey),
+    null,
+    `${locale}: keyboard reset left the persisted storage key`,
   );
 
   const headings = await page.evaluate(() => ({
@@ -568,6 +670,18 @@ async function captureChecklistStates(page) {
       .waitFor({ state: "visible" });
     await page.waitForTimeout(200);
     await capture(page, `en-${width}-checklist-complete`);
+
+    const reset = checklist.locator(".article-checklist-reset");
+    await reset.focus();
+    await page.keyboard.press("Enter");
+    await reset.waitFor({ state: "detached" });
+    await waitForFocused(
+      page,
+      checkboxes.first(),
+      `${width}px checklist reset screenshot`,
+    );
+    await page.waitForTimeout(200);
+    await capture(page, `en-${width}-checklist-reset-focus`);
   }
 }
 
@@ -659,6 +773,14 @@ async function verifyBrowser(name, browserType) {
 }
 
 const failures = [];
+
+try {
+  await verifyProductionRouteBudgets();
+} catch (error) {
+  failures.push({ name: "route-budgets", error });
+  console.error("FAIL route budgets");
+  console.error(error);
+}
 
 for (const [name, browserType] of [
   ["chromium", chromium],

@@ -417,6 +417,33 @@ test("renders persistent native article checklists with localized status and res
   assert.match(articleChecklistSource, /\{labels\.reset\}/);
 });
 
+test("restores reset focus to the first native checkbox after React commits", () => {
+  assert.match(
+    articleChecklistSource,
+    /import \{ useEffect, useRef, useState \} from "react"/,
+  );
+  assert.match(
+    articleChecklistSource,
+    /const firstCheckboxRef = useRef<HTMLInputElement>\(null\)/,
+  );
+  assert.match(
+    articleChecklistSource,
+    /const resetFocusFrameRef = useRef<number \| null>\(null\)/,
+  );
+  assert.match(
+    articleChecklistSource,
+    /function handleReset\(\) \{[\s\S]*?persist\(new Set<number>\(\)\)[\s\S]*?requestAnimationFrame\(\(\) => \{[\s\S]*?firstCheckboxRef\.current\?\.focus\(\)/,
+  );
+  assert.match(
+    articleChecklistSource,
+    /ref=\{index === 0 \? firstCheckboxRef : undefined\}/,
+  );
+  assert.match(
+    articleChecklistSource,
+    /return \(\) => \{[\s\S]*?cancelAnimationFrame\(resetFocusFrameRef\.current\)/,
+  );
+});
+
 test("uses stable recursive checklist keys without duplicating the chapter heading", () => {
   assert.match(guideShellSource, /<ArticleContent chapter=\{chapter\} locale=\{locale\} \/>/);
   assert.match(articleSource, /export function ArticleContent\(\{[\s\S]*?chapter,[\s\S]*?locale,[\s\S]*?\}:/);

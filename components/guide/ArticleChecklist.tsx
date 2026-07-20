@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import {
   readChecklistState,
@@ -25,6 +25,8 @@ export function ArticleChecklist({
   storageKey,
   title,
 }: ArticleChecklistProps) {
+  const firstCheckboxRef = useRef<HTMLInputElement>(null);
+  const resetFocusFrameRef = useRef<number | null>(null);
   const [checked, setChecked] = useState(() => new Set<number>());
   const isComplete = checked.size === items.length && items.length > 0;
 
@@ -48,6 +50,14 @@ export function ArticleChecklist({
     };
   }, [items.length, storageKey]);
 
+  useEffect(() => {
+    return () => {
+      if (resetFocusFrameRef.current !== null) {
+        cancelAnimationFrame(resetFocusFrameRef.current);
+      }
+    };
+  }, []);
+
   function persist(next: Set<number>) {
     setChecked(next);
 
@@ -65,6 +75,15 @@ export function ArticleChecklist({
 
   function handleReset() {
     persist(new Set<number>());
+
+    if (resetFocusFrameRef.current !== null) {
+      cancelAnimationFrame(resetFocusFrameRef.current);
+    }
+
+    resetFocusFrameRef.current = requestAnimationFrame(() => {
+      resetFocusFrameRef.current = null;
+      firstCheckboxRef.current?.focus();
+    });
   }
 
   return (
@@ -95,6 +114,7 @@ export function ArticleChecklist({
               <input
                 checked={checked.has(index)}
                 className="article-checklist-input"
+                ref={index === 0 ? firstCheckboxRef : undefined}
                 type="checkbox"
                 onChange={() => handleToggle(index)}
               />

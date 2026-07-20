@@ -10,6 +10,8 @@ const guideCopy = {
       sections: "Разделы",
       textMatches: "Совпадения в тексте",
       noResults: "Ничего не найдено",
+      loading: "Загрузка поиска…",
+      error: "Не удалось загрузить поиск",
     },
     menu: {
       title: "Главы гайда",
@@ -35,6 +37,8 @@ const guideCopy = {
       sections: "Sections",
       textMatches: "Text matches",
       noResults: "No results",
+      loading: "Loading search…",
+      error: "Search could not be loaded",
     },
     menu: {
       title: "Guide chapters",

@@ -120,6 +120,43 @@ test("establishes light theme before every non-theme screenshot group", () => {
   );
 });
 
+test("asserts the computed search-control focus indicator wherever search opens", () => {
+  assert.match(runtimeSource, /async function assertSearchControlFocusIndicator/);
+  assert.match(runtimeSource, /getComputedStyle\(control\)/);
+  assert.match(runtimeSource, /outlineStyle/);
+  assert.match(runtimeSource, /outlineWidth/);
+  assert.match(runtimeSource, /Number\.parseFloat\(indicator\.outlineWidth\) >= 2/);
+  assert.match(
+    runtimeSource,
+    /await waitForFocused\(page, searchbox, "search dialog"\);\s*await assertSearchControlFocusIndicator\(searchbox/,
+  );
+});
+
+test("proves keyboard checklist reset restores focus and clears state", () => {
+  assert.match(runtimeSource, /keyboardReset\.focus\(\)/);
+  assert.match(runtimeSource, /page\.keyboard\.press\("Enter"\)/);
+  assert.match(runtimeSource, /keyboardReset\.waitFor\(\{ state: "detached" \}\)/);
+  assert.match(runtimeSource, /waitForFocused\([\s\S]*?reloadedCheckboxes\.first\(\)/);
+  assert.match(runtimeSource, /keyboard reset left checked items/);
+  assert.match(runtimeSource, /keyboard reset left the persisted storage key/);
+});
+
+test("proves breakpoint menu close returns focus to active desktop navigation", () => {
+  assert.match(runtimeSource, /data-guide-menu-return-focus/);
+  assert.match(runtimeSource, /await setViewport\(page, 1440\)/);
+  assert.match(runtimeSource, /breakpoint close left the background inert/);
+  assert.match(runtimeSource, /desktop menu focus fallback/);
+});
+
+test("enforces RU and EN intro HTML byte budgets without off-page content", () => {
+  assert.match(runtimeSource, /const introSlug = "intro"/);
+  assert.match(runtimeSource, /async function verifyProductionRouteBudgets/);
+  assert.match(runtimeSource, /Buffer\.byteLength\(html, "utf8"\)/);
+  assert.match(runtimeSource, /htmlBytes < 500_000/);
+  assert.match(runtimeSource, /!html\.includes\("Sun Microsystems"\)/);
+  assert.match(runtimeSource, /ROUTE_BUDGET/);
+});
+
 test("does not classify launch failures by matching error messages", () => {
   assert.doesNotMatch(runtimeSource, /isMissingRuntime|playwright install/i);
 });

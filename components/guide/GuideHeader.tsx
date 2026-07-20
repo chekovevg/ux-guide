@@ -75,6 +75,7 @@ export function GuideHeader({
             className="icon-button"
             aria-label={menuOpen ? closeMenuLabel : menuLabel}
             aria-expanded={menuOpen}
+            data-guide-menu-return-focus=""
             type="button"
             onClick={onMenu}
           >

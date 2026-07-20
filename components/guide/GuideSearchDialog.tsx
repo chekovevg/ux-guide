@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type * as React from "react";
 import { Search } from "lucide-react";
 import {
@@ -17,7 +17,7 @@ import { useModalDialog } from "./useModalDialog";
 
 type GuideSearchDialogProps = {
   backgroundRef: React.RefObject<HTMLElement | null>;
-  index: GuideSearchRecord[];
+  indexHref: string;
   locale: "ru" | "en";
   open: boolean;
   onClose: () => void;
@@ -33,11 +33,15 @@ const emptySearchResults: GuideSearchResults = {
 
 export function GuideSearchDialog({
   backgroundRef,
-  index,
+  indexHref,
   locale,
   open,
   onClose,
 }: GuideSearchDialogProps) {
+  const [index, setIndex] = useState<GuideSearchRecord[] | null>(null);
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
   const [query, setQuery] = useState("");
   const dialogRef = useRef<HTMLElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,12 +50,13 @@ export function GuideSearchDialog({
   const results = useMemo(
     () =>
       normalizedQuery
-        ? searchGuideIndex(index, normalizedQuery)
+        ? searchGuideIndex(index ?? [], normalizedQuery)
         : emptySearchResults,
     [index, normalizedQuery],
   );
   const suggestedChapters = useMemo(
-    () => (normalizedQuery ? [] : getSuggestedGuideChapters(index)),
+    () =>
+      normalizedQuery ? [] : getSuggestedGuideChapters(index ?? []),
     [index, normalizedQuery],
   );
   const hasResults =
@@ -59,8 +64,48 @@ export function GuideSearchDialog({
     results.sections.length > 0 ||
     results.text.length > 0;
 
+  useEffect(() => {
+    if (!open || index !== null) {
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+
+    void (async () => {
+      try {
+        const response = await fetch(indexHref, { signal: controller.signal });
+
+        if (!response.ok) {
+          throw new Error(`Search index request failed: ${response.status}`);
+        }
+
+        const payload: unknown = await response.json();
+
+        if (!Array.isArray(payload)) {
+          throw new Error("Search index response was not an array");
+        }
+
+        if (!active) return;
+        setIndex(payload as GuideSearchRecord[]);
+        setLoadState("ready");
+      } catch {
+        if (!active || controller.signal.aborted) return;
+        setLoadState("error");
+      }
+    })();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [index, indexHref, open]);
+
   const handleClose = () => {
     setQuery("");
+    if (index === null) {
+      setLoadState("loading");
+    }
     onClose();
   };
 
@@ -116,7 +161,13 @@ export function GuideSearchDialog({
         </div>
 
         <div className="search-dialog-results">
-          {normalizedQuery ? (
+          {index === null ? (
+            <p className="search-dialog-status" role="status">
+              {loadState === "error"
+                ? copy.search.error
+                : copy.search.loading}
+            </p>
+          ) : normalizedQuery ? (
             hasResults ? (
               <>
                 <SearchResultGroup

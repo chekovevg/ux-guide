@@ -14,7 +14,6 @@ import type {
   GuideLanguageLink,
   GuideNavigationGroup,
   GuideNavigationItem,
-  GuideSearchRecord,
   GuideSection,
   GuideThemeMode,
 } from "./types";
@@ -26,7 +25,7 @@ type GuideShellProps = {
   locale: "ru" | "en";
   navigation: GuideNavigationItem[];
   navigationGroups: GuideNavigationGroup[];
-  searchIndex: GuideSearchRecord[];
+  searchIndexHref: string;
 };
 
 export function GuideShell({
@@ -36,7 +35,7 @@ export function GuideShell({
   locale,
   navigation,
   navigationGroups,
-  searchIndex,
+  searchIndexHref,
 }: GuideShellProps) {
   const appContentRef = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState(chapter.sections[0]?.id ?? "");
@@ -299,15 +298,13 @@ export function GuideShell({
         />
       </div>
 
-      {searchOpen ? (
-        <GuideSearchDialog
-          backgroundRef={appContentRef}
-          index={searchIndex}
-          locale={locale}
-          open={searchOpen}
-          onClose={() => setSearchOpen(false)}
-        />
-      ) : null}
+      <GuideSearchDialog
+        backgroundRef={appContentRef}
+        indexHref={searchIndexHref}
+        locale={locale}
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+      />
 
       <MobileSiteMenu
         backgroundRef={appContentRef}

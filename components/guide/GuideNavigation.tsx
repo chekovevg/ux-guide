@@ -117,6 +117,7 @@ export function GuideNavigation({
                 className="guide-nav-link"
                 data-active={item.active ? "true" : undefined}
                 data-disabled={!item.available ? "true" : undefined}
+                data-guide-menu-return-focus={item.active ? "" : undefined}
                 href={item.available ? getGuideChapterHref(item.slug, basePath) : "#"}
                 onClick={(event) => {
                   if (!item.available) {

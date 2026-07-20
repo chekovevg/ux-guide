@@ -1784,6 +1784,11 @@ input {
     color: var(--muted);
   }
 
+  .search-dialog-control:focus-within {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
+
   .search-dialog-input {
     min-width: 0;
     flex: 1 1 auto;
@@ -1899,7 +1904,8 @@ input {
     font-weight: 600;
   }
 
-  .search-dialog-empty {
+  .search-dialog-empty,
+  .search-dialog-status {
     padding: 22px 12px;
     color: var(--muted);
     font-size: 13px;

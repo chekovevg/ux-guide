@@ -136,12 +136,23 @@ test("focuses the search input and delegates modal lifecycle to the shared hook"
   assert.match(searchSource, /ref=\{inputRef\}/);
 });
 
-test("marks every search trigger and opts only search into equivalent focus fallback", () => {
+test("marks every search trigger and opts search into equivalent focus fallback", () => {
   assert.equal((headerSource.match(/data-guide-search-trigger/g) ?? []).length, 1);
   assert.equal((navigationSource.match(/data-guide-search-trigger/g) ?? []).length, 2);
   assert.match(searchSource, /returnFocusSelector: "\[data-guide-search-trigger\]"/);
   assert.match(hookSource, /returnFocusSelector\?: string/);
-  assert.doesNotMatch(mobileSource, /returnFocusSelector/);
+});
+
+test("falls mobile-menu focus back to the visible active desktop chapter", () => {
+  assert.match(headerSource, /data-guide-menu-return-focus=""/);
+  assert.match(
+    navigationSource,
+    /data-guide-menu-return-focus=\{item\.active \? "" : undefined\}/,
+  );
+  assert.match(
+    mobileSource,
+    /returnFocusSelector: "\[data-guide-menu-return-focus\]"/,
+  );
 });
 
 test("keeps chapter navigation below the header and the footer at the bottom", () => {
@@ -158,12 +169,12 @@ test("places guide UI behind one background wrapper with modal siblings", () => 
   const wrapperStart = shellSource.indexOf(
     '<div ref={appContentRef} className="guide-app-content">',
   );
-  const wrapperEnd = shellSource.indexOf("{searchOpen ? (", wrapperStart);
+  const guideSearch = shellSource.indexOf("<GuideSearchDialog", wrapperStart);
+  const wrapperEnd = guideSearch;
   const header = shellSource.indexOf("<GuideHeader", wrapperStart);
   const main = shellSource.indexOf("<main", wrapperStart);
   const contents = shellSource.indexOf("<MobileContentsSection", wrapperStart);
   const menu = shellSource.indexOf("<MobileSiteMenu", wrapperStart);
-  const guideSearch = shellSource.indexOf("<GuideSearchDialog", wrapperStart);
 
   assert.notEqual(wrapperStart, -1);
   assert.ok(header > wrapperStart && header < wrapperEnd);
@@ -173,8 +184,8 @@ test("places guide UI behind one background wrapper with modal siblings", () => 
     shellSource.slice(wrapperStart, wrapperEnd),
     /<MobileContentsSection[\s\S]*?<\/div>\s*$/,
   );
-  assert.ok(menu > wrapperEnd);
-  assert.ok(guideSearch > wrapperEnd);
+  assert.ok(guideSearch > wrapperStart);
+  assert.ok(menu > guideSearch);
   assert.match(shellSource, /<GuideSearchDialog[\s\S]*?backgroundRef=\{appContentRef\}/);
   assert.match(shellSource, /<MobileSiteMenu[\s\S]*?backgroundRef=\{appContentRef\}/);
 });
