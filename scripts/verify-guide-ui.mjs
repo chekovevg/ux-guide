@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { chromium, firefox, webkit } from "playwright";
+import {
+  isExactChapterRootDestination,
+  launchBrowserIfAvailable,
+} from "./verify-guide-ui-helpers.mjs";
 
 const baseUrl = (process.env.GUIDE_BASE_URL ?? "http://127.0.0.1:3000").replace(
   /\/$/,
@@ -151,19 +156,18 @@ async function verifySearchAndMobileChrome(page, locale) {
   const chapterHrefs = await chapterGroup.locator("a").evaluateAll((links) =>
     links.map((link) => new URL(link.href).pathname),
   );
-  const textDestinations = await textGroup.locator("a").evaluateAll((links) =>
-    links.map((link) => {
-      const url = new URL(link.href);
-      return { pathname: url.pathname, hash: url.hash };
-    }),
-  );
+  const textDestinations = await textGroup
+    .locator("a")
+    .evaluateAll((links) => links.map((link) => link.href));
   assert.ok(
     chapterHrefs.includes(chapterPath),
     `${locale}: full-text query did not link its chapter`,
   );
   assert.ok(
-    textDestinations.some(({ pathname }) => pathname === chapterPath),
-    `${locale}: full-text result did not link its chapter or nearest section`,
+    textDestinations.some((href) =>
+      isExactChapterRootDestination(href, chapterPath),
+    ),
+    `${locale}: chapter-level full-text result did not link the exact chapter root`,
   );
 
   await page.keyboard.press("Escape");
@@ -447,9 +451,39 @@ async function verifyTables(page) {
   }
 }
 
+async function restoreThemeState(page, previousThemeState) {
+  await page.evaluate(({ renderedTheme, storedTheme }) => {
+    if (storedTheme === null) {
+      localStorage.removeItem("wynde-guide-theme");
+    } else {
+      localStorage.setItem("wynde-guide-theme", storedTheme);
+    }
+
+    if (renderedTheme === null) {
+      document.documentElement.removeAttribute("data-theme");
+    } else {
+      document.documentElement.setAttribute("data-theme", renderedTheme);
+    }
+  }, previousThemeState);
+}
+
+async function establishTheme(page, theme) {
+  await page.evaluate((nextTheme) => {
+    localStorage.setItem("wynde-guide-theme", nextTheme);
+  }, theme);
+  await page.reload({ waitUntil: "networkidle" });
+  await page
+    .locator(`html[data-theme="${theme}"]`)
+    .waitFor({ state: "attached" });
+}
+
 async function verifyDarkReload(page, locale) {
   await setViewport(page, 1440);
   await openGuidePage(page, guideUrl(locale, resistanceSlug));
+  const previousThemeState = await page.evaluate(() => ({
+    renderedTheme: document.documentElement.getAttribute("data-theme"),
+    storedTheme: localStorage.getItem("wynde-guide-theme"),
+  }));
   const hydrationErrors = [];
   const onConsole = (message) => {
     if (message.type() === "error" && hydrationPattern.test(message.text())) {
@@ -464,6 +498,7 @@ async function verifyDarkReload(page, locale) {
     await page.locator('html[data-theme="dark"]').waitFor({ state: "attached" });
   } finally {
     page.off("console", onConsole);
+    await restoreThemeState(page, previousThemeState);
   }
 
   assert.deepEqual(
@@ -565,44 +600,36 @@ async function captureThemeStates(page) {
   for (const width of visualWidths) {
     await setViewport(page, width);
     await openGuidePage(page, guideUrl("en", resistanceSlug));
-    await page.evaluate(() => localStorage.setItem("wynde-guide-theme", "light"));
-    await page.reload({ waitUntil: "networkidle" });
-    await page.locator('html[data-theme="light"]').waitFor({ state: "attached" });
+    await establishTheme(page, "light");
     await capture(page, `en-${width}-theme-light`);
 
-    await page.evaluate(() => localStorage.setItem("wynde-guide-theme", "dark"));
-    await page.reload({ waitUntil: "networkidle" });
-    await page.locator('html[data-theme="dark"]').waitFor({ state: "attached" });
+    await establishTheme(page, "dark");
     await capture(page, `en-${width}-theme-dark`);
   }
 }
 
 async function captureVisualStates(page) {
+  await establishTheme(page, "light");
   await captureSearchStates(page);
+  await establishTheme(page, "light");
   await captureChecklistStates(page);
+  await establishTheme(page, "light");
   await captureNavigationStates(page);
+  await establishTheme(page, "light");
   await captureTableStates(page);
   await captureThemeStates(page);
 }
 
-function isMissingRuntime(error) {
-  const message = error instanceof Error ? error.message : String(error);
-  return /executable doesn.t exist|browser executable|playwright install/i.test(
-    message,
-  );
-}
-
 async function verifyBrowser(name, browserType) {
-  let browser;
+  const browser = await launchBrowserIfAvailable(browserType, existsSync);
 
-  try {
-    browser = await browserType.launch({ headless: true });
-  } catch (error) {
-    if (name !== "chromium" && isMissingRuntime(error)) {
-      console.log(`SKIP ${name}: runtime unavailable`);
-      return { name, status: "skip" };
+  if (browser === null) {
+    if (name === "chromium") {
+      throw new Error("chromium runtime unavailable");
     }
-    throw new Error(`${name} launch failed`, { cause: error });
+
+    console.log(`SKIP ${name}: runtime unavailable`);
+    return { name, status: "skip" };
   }
 
   try {
